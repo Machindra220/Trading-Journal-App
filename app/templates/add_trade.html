@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Add Trade{% endblock %}
+{% block content %}
+<h2>Add New Trade</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div class="flash-{{ category }}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('trades.add_trade') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF Token -->
+  <label for="stock_name">Stock Name</label>
+  <input type="text" name="stock_name" id="stock_name" placeholder="e.g. INFY" required oninput="this.value = this.value.toUpperCase()" />
+
+  <!-- <label for="entry_note">Note (optional)</label>
+  <textarea name="entry_note" id="entry_note" rows="3" placeholder="Add any context or strategy..."></textarea> -->
+
+  <button type="submit">Create Trade</button>
+</form>
+{% endblock %}

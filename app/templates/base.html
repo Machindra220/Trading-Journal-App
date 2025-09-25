@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Portfolio App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
+    <style>
+      .flash-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        padding: 0.5em;
+        border-radius: 5px;
+        margin-bottom: 1em;
+      }
+      .flash-error {
+        background-color: #f8d7da;
+        color: #842029;
+        padding: 0.5em;
+        border-radius: 5px;
+        margin-bottom: 1em;
+      }
+    </style>
+  </head>
+  <body>
+            {% if current_user.is_authenticated %}
+        <nav>
+          <ul>
+            <li><strong>Portfolio App</strong></li>
+          </ul>
+          <ul>
+            <li><a href="{{ url_for('trades.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('trades.add_trade') }}">Add Trade</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+          </ul>
+        </nav>
+        {% endif %}
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

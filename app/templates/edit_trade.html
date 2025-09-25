@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Edit Trade{% endblock %}
+{% block content %}
+<h2>Edit Trade – {{ trade.stock_name }}</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div class="flash-{{ category }}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('trades.edit_trade', trade_id=trade.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF Token -->
+
+  <label for="stock_name">Stock Name</label>
+  <input type="text" name="stock_name" id="stock_name" value="{{ trade.stock_name }}" required oninput="this.value = this.value.toUpperCase()" />
+
+  <label for="entry_date">Entry Date</label>
+  <input type="date" name="entry_date" id="entry_date" value="{{ trade.entry_date.isoformat() if trade.entry_date else '' }}" />
+
+  <label for="exit_date">Exit Date</label>
+  <input type="date" name="exit_date" id="exit_date" value="{{ trade.exit_date.isoformat() if trade.exit_date else '' }}" />
+
+  <label for="note">Journal Note</label>
+  <textarea name="journal" id="note" rows="3" placeholder="Add journal or summary...">{{ trade.journal }}</textarea>
+
+  <button type="submit" style="background-color:#007bff; color:white; padding:6px 12px; border:none; border-radius:4px;">✅ Update Trade</button>
+  <button type="button" onclick="openDeleteModal()" style="background-color:#dc3545; color:white; padding:6px 12px; border:none; border-radius:4px; margin-left:10px;">🗑️ Delete Trade</button>
+  <a href="{{ url_for('trades.dashboard') }}" style="margin-left:10px;">Cancel</a>
+</form>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:999;">
+  <div style="background:white; padding:20px; border-radius:8px; width:300px; margin:100px auto; text-align:center;">
+    <p>Are you sure you want to delete this trade?</p>
+    <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=trade.id) }}">
+      {{ csrf_token() }}
+      <button type="submit" style="background-color:#dc3545; color:white; padding:6px 12px; border:none; border-radius:4px;">Yes, Delete</button>
+      <button type="button" onclick="closeDeleteModal()" style="margin-left:10px; padding:6px 12px;">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'block';
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
+}
+</script>
+{% endblock %}
