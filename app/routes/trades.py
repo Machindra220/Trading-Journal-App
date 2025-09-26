@@ -1,8 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
 from app.models import Trade, TradeEntry, TradeExit
 from app import db
-from datetime import date
+from datetime import date, timedelta
+import pandas as pd
+from io import BytesIO
+
+
+
 
 trades_bp = Blueprint('trades', __name__)
 
@@ -143,6 +148,11 @@ def add_entry(trade_id):
             trade_id=trade.id
         )
         db.session.add(entry)
+
+        # ✅ Set entry_date if not already set
+        if not trade.entry_date:
+            trade.entry_date = date_obj
+
         db.session.commit()
         flash("Buy entry added successfully.", "success")
 
@@ -190,14 +200,15 @@ def add_exit(trade_id):
             trade_id=trade.id
         )
         db.session.add(exit)
-        db.session.commit()
 
-        # ✅ Recalculate totals after commit
-        updated_sell_qty = sum(x.quantity for x in trade.exits)
+        # ✅ Include new exit in total sell quantity
+        updated_sell_qty = total_sell_qty + quantity
+
         if updated_sell_qty == total_buy_qty and total_buy_qty > 0:
             trade.status = "Closed"
-            db.session.commit()
+            trade.exit_date = max([x.date for x in trade.exits] + [date_obj])  # Include new exit date
 
+        db.session.commit()
         flash("Sell exit added successfully.", "success")
 
     except Exception as e:
@@ -205,6 +216,7 @@ def add_exit(trade_id):
         flash(f"Error adding sell exit: {str(e)}", "error")
 
     return redirect(url_for('trades.view_trade', trade_id=trade.id))
+
 
 #edit_entry(entry_id) — Edit Buy Entry
 @trades_bp.route('/entry/<int:entry_id>/edit', methods=['GET', 'POST'])
@@ -372,3 +384,137 @@ def delete_trade(trade_id):
         flash(f"Error deleting trade: {str(e)}", "error")
 
     return redirect(url_for('trades.dashboard'))
+
+#trade_history() Route
+@trades_bp.route('/history', methods=['GET'])
+@login_required
+def trade_history():
+    stock_filter = request.args.get('stock', '').upper()
+    date_range = request.args.get('date_range')
+    sort_order = request.args.get('sort', 'desc')
+
+    query = Trade.query.filter_by(user_id=current_user.id, status='Closed')
+
+    if stock_filter:
+        query = query.filter(Trade.stock_name == stock_filter)
+
+    today = date.today()
+    if date_range == 'last_month':
+        start_date = today.replace(day=1) - timedelta(days=1)
+        start_date = start_date.replace(day=1)
+        query = query.filter(Trade.exit_date >= start_date)
+
+    elif date_range == 'last_3_months':
+        start_date = today - timedelta(days=90)
+        query = query.filter(Trade.exit_date >= start_date)
+
+    elif date_range == 'last_year':
+        start_date = today - timedelta(days=365)
+        query = query.filter(Trade.exit_date >= start_date)
+
+    trades = query.order_by(Trade.exit_date.desc()).all()
+
+    enriched = []
+    for trade in trades:
+        total_quantity = sum(e.quantity for e in trade.entries)
+        total_invested = sum(e.quantity * e.price for e in trade.entries)
+        avg_entry_price = round(total_invested / total_quantity, 2) if total_quantity else 0
+
+        total_exited = sum(x.quantity * x.price for x in trade.exits)
+        avg_exit_price = round(total_exited / total_quantity, 2) if total_quantity else 0
+
+        realized_pnl = round(total_exited - total_invested, 2)
+        total_days = (trade.exit_date - trade.entry_date).days if trade.entry_date and trade.exit_date else 0
+
+        entry_notes = [e.note for e in trade.entries if e.note]
+        exit_notes = [x.note for x in trade.exits if x.note]
+        combined_notes = " | ".join(entry_notes + exit_notes)
+
+        enriched.append({
+            'stock_name': trade.stock_name.upper(),
+            'entry_date': trade.entry_date,
+            'exit_date': trade.exit_date,
+            'avg_entry_price': avg_entry_price,
+            'avg_exit_price': avg_exit_price,
+            'total_quantity': total_quantity,
+            'realized_pnl': realized_pnl,
+            'total_days': total_days,
+            'notes': combined_notes
+        })
+
+    enriched.sort(key=lambda t: t['realized_pnl'], reverse=(sort_order == 'desc'))
+    stock_list = sorted(set(t.stock_name for t in trades))
+
+    return render_template('trade_history.html',
+                           trades=enriched,
+                           stock_list=stock_list,
+                           selected_stock=stock_filter,
+                           selected_range=date_range,
+                           sort=sort_order)
+
+
+#export logic
+@trades_bp.route('/history/export')
+@login_required
+def export_history():
+    stock_filter = request.args.get('stock', '').upper()
+    date_range = request.args.get('date_range')
+    sort_order = request.args.get('sort', 'desc')
+
+    query = Trade.query.filter_by(user_id=current_user.id, status='Closed')
+
+    if stock_filter:
+        query = query.filter(Trade.stock_name == stock_filter)
+
+    today = date.today()
+    if date_range == 'last_month':
+        start_date = today.replace(day=1) - timedelta(days=1)
+        start_date = start_date.replace(day=1)
+        query = query.filter(Trade.exit_date >= start_date)
+    elif date_range == 'last_3_months':
+        start_date = today - timedelta(days=90)
+        query = query.filter(Trade.exit_date >= start_date)
+    elif date_range == 'last_year':
+        start_date = today - timedelta(days=365)
+        query = query.filter(Trade.exit_date >= start_date)
+
+    trades = query.order_by(Trade.exit_date.desc()).all()
+
+    data = []
+    for trade in trades:
+        total_quantity = sum(e.quantity for e in trade.entries)
+        total_invested = sum(e.quantity * e.price for e in trade.entries)
+        avg_entry_price = round(total_invested / total_quantity, 2) if total_quantity else 0
+
+        total_exited = sum(x.quantity * x.price for x in trade.exits)
+        avg_exit_price = round(total_exited / total_quantity, 2) if total_quantity else 0
+
+        realized_pnl = round(total_exited - total_invested, 2)
+        total_days = (trade.exit_date - trade.entry_date).days if trade.entry_date and trade.exit_date else 0
+
+        entry_notes = [e.note for e in trade.entries if e.note]
+        exit_notes = [x.note for x in trade.exits if x.note]
+        combined_notes = " | ".join(entry_notes + exit_notes)
+
+        data.append({
+            'Stock Name': trade.stock_name.upper(),
+            'Entry': trade.entry_date.strftime('%d-%b-%Y') if trade.entry_date else '',
+            'Exit': trade.exit_date.strftime('%d-%b-%Y') if trade.exit_date else '',
+            'Entry (Avg)': avg_entry_price,
+            'Exit (Avg)': avg_exit_price,
+            'Quantity': total_quantity,
+            'Duration': f"{total_days} days",
+            'Realized P&L': realized_pnl,
+            'Notes': combined_notes
+        })
+
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Completed Trades')
+
+    output.seek(0)
+    return send_file(output,
+                     download_name='completed_trades.xlsx',
+                     as_attachment=True,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

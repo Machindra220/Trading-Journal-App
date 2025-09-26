@@ -21,12 +21,18 @@ class User(UserMixin, db.Model):
 
 class Trade(db.Model):
     __tablename__ = 'trades'
+
     id = db.Column(db.Integer, primary_key=True)
     stock_name = db.Column(db.String(20), nullable=False)
-    entry_note = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    status = db.Column(db.String(10), nullable=False, default="Open")  # ✅ Add this line
+    entry_note = db.Column(db.Text)  # Optional note at entry
+    journal = db.Column(db.Text)     # Optional summary or combined notes
+
+    entry_date = db.Column(db.Date)  # First buy date
+    exit_date = db.Column(db.Date)   # Final sell date
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(10), nullable=False, default="Open")
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
