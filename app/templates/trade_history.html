@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Past/Completed Trades{% endblock %}
+{% block content %}
+<h2>📊 Past/Completed Trades</h2>
+
+<!-- Filter Row -->
+<form method="GET" action="{{ url_for('trades.trade_history') }}" style="margin-bottom:20px;">
+  <div style="display:flex; flex-wrap:wrap; gap:15px; align-items:flex-end;">
+
+    <div>
+      <label for="stock_filter" title="Filter trades by stock symbol">📈 Stock</label>
+      <select name="stock" id="stock_filter">
+        <option value="">All</option>
+        {% for symbol in stock_list %}
+          <option value="{{ symbol }}" {% if symbol == selected_stock %}selected{% endif %}>{{ symbol }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="date_range" title="Show trades closed in a specific time window">📅 Date Range</label>
+      <select name="date_range" id="date_range">
+        <option value="">All</option>
+        <option value="last_month" {% if selected_range == 'last_month' %}selected{% endif %}>Last Month</option>
+        <option value="last_3_months" {% if selected_range == 'last_3_months' %}selected{% endif %}>Last 3 Months</option>
+        <option value="last_year" {% if selected_range == 'last_year' %}selected{% endif %}>Last Year</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="sort" title="Sort trades by realized profit/loss">🔃 Sort</label>
+      <select name="sort" id="sort">
+        <option value="desc" {% if sort == 'desc' %}selected{% endif %}>High Profit → Low</option>
+        <option value="asc" {% if sort == 'asc' %}selected{% endif %}>Low Profit → High</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:5px; margin-top:1.5em;">
+      <button type="submit" title="Apply selected filters">🔍 Apply</button>
+      <a href="{{ url_for('trades.export_history', stock=selected_stock, date_range=selected_range, sort=sort) }}"
+         class="button" title="Download filtered trades as Excel"
+         style="text-decoration:none; padding:4px 22px; background:#007bff; color:white; border-radius:4px;">📤 Export</a>
+    </div>
+
+  </div>
+</form>
+
+
+<!-- Trade Table -->
+{% if trades %}
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Stock Name</th>
+          <th>Entry</th>
+          <th>Exit</th>
+          <th>Entry (Avg)</th>
+          <th>Exit (Avg)</th>
+          <th>Quantity</th>
+          <th>Duration</th>
+          <th>Realized P&L</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in trades %}
+          <tr>
+            <td>{{ t.stock_name }}</td>
+            <td>{{ t.entry_date.strftime('%d %b %Y') if t.entry_date else '—' }}</td>
+            <td>{{ t.exit_date.strftime('%d %b %Y') if t.exit_date else '—' }}</td>
+            <td>₹{{ "%.2f"|format(t.avg_entry_price) }}</td>
+            <td>₹{{ "%.2f"|format(t.avg_exit_price) }}</td>
+            <td>{{ t.total_quantity }}</td>
+            <td>{{ t.total_days }} days</td>
+            <td>
+              {% if t.realized_pnl >= 0 %}
+                <span style="color:green;">₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+              {% else %}
+                <span style="color:red;">₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+              {% endif %}
+            </td>
+            <td>{{ t.notes or '—' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div style="color:gray; font-style:italic;">No completed trades found for selected filters.</div>
+{% endif %}
+{% endblock %}
