@@ -20,7 +20,9 @@ def create_app():
     from app.routes.export import export_bp
     from app.routes.resources import resources_bp
     from app.routes.notes import notes_bp
+    from app.routes.calendar import calendar_bp
 
+    app.register_blueprint(calendar_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(trades_bp)
     app.register_blueprint(stats_bp, url_prefix='/stats')

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<div class="view-toggle">
+  <button id="calendarBtn" class="btn btn-primary">📅 Calendar View</button>
+  <button id="listBtn" class="btn btn-outline-secondary">📋 List View</button>
+</div>
+
+<div id="summary" class="summary-badges"></div>
+
+<div id="calendar-container">
+  <div id="calendar"></div>
+</div>
+
+<div id="list-container" style="display:none;">
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Date</th><th>Stock</th><th>P&L</th><th>Notes</th></tr>
+    </thead>
+    <tbody id="trade-list"></tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    events: '/calendar/events',
+
+    eventContent: function(arg) {
+      return { html: `<div class="fc-event-title">${arg.event.title}</div>` };
+    },
+
+    eventDidMount: function(info) {
+      const notes = info.event.extendedProps.notes;
+      if (notes) {
+        new bootstrap.Tooltip(info.el, {
+          title: notes,
+          placement: 'top',
+          trigger: 'hover',
+          container: 'body'
+        });
+      }
+    }
+  });
+
+  calendar.render();
+
+  // ✅ Summary badges
+  fetch('/calendar/summary')
+    .then(res => res.json())
+    .then(data => {
+      const summary = document.getElementById('summary');
+      summary.innerHTML = `
+        <span class="badge bg-success">This Month: ₹${data.this_month}</span>
+        <span class="badge bg-info">Last 3 Months: ₹${data.last_3_months}</span>
+        <span class="badge bg-warning text-dark">Quarter: ₹${data.quarter}</span>
+        <span class="badge bg-secondary">Year: ₹${data.year}</span>
+      `;
+    });
+
+  // ✅ List view
+  fetch('/calendar/events')
+    .then(res => res.json())
+    .then(events => {
+      const list = document.getElementById('trade-list');
+      list.innerHTML = ''; // clear previous
+      events.forEach(ev => {
+        const pnl = parseFloat(ev.title.split('₹')[1]);
+        const color = pnl > 0 ? 'text-success' : pnl < 0 ? 'text-danger' : 'text-warning';
+        list.innerHTML += `
+          <tr>
+            <td>${ev.start}</td>
+            <td>${ev.title.split(' ₹')[0]}</td>
+            <td class="${color}">₹${pnl}</td>
+            <td>${ev.extendedProps.notes || ''}</td>
+          </tr>
+        `;
+      });
+    });
+
+  // ✅ Toggle buttons
+  document.getElementById('calendarBtn').onclick = () => {
+    document.getElementById('calendar-container').style.display = 'block';
+    document.getElementById('list-container').style.display = 'none';
+  };
+  document.getElementById('listBtn').onclick = () => {
+    document.getElementById('calendar-container').style.display = 'none';
+    document.getElementById('list-container').style.display = 'block';
+  };
+});
+
+fetch('/calendar/events')
+  .then(res => res.json())
+  .then(events => {
+    console.log(events); // ✅ Check if title and start are present
+  });
+
+</script>
+
+
+<style>
+.view-toggle {
+  margin-bottom: 1em;
+}
+.summary-badges {
+  margin-bottom: 1em;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#calendar {
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.fc-event-title {
+  font-weight: bold;
+  font-size: 0.85em;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: inherit;
+}
+
+
+</style>
+{% endblock %}

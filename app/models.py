@@ -38,6 +38,16 @@ class Trade(db.Model):
 
     entries = db.relationship('TradeEntry', backref='trade', lazy=True)
     exits = db.relationship('TradeExit', backref='trade', lazy=True)
+    @property
+    def pnl(self):
+        if self.status.lower() != 'closed':
+            return 0
+
+        total_entry = sum(e.price * e.quantity for e in self.entries if e.price and e.quantity)
+        total_exit = sum(x.price * x.quantity for x in self.exits if x.price and x.quantity)
+
+        return round(total_exit - total_entry, 2)
+
 
 
 class TradeEntry(db.Model):
