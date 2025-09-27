@@ -507,14 +507,3 @@ def export_history():
             'Realized P&L': realized_pnl,
             'Notes': combined_notes
         })
-
-    df = pd.DataFrame(data)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Completed Trades')
-
-    output.seek(0)
-    return send_file(output,
-                     download_name='completed_trades.xlsx',
-                     as_attachment=True,
-                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

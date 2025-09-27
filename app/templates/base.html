@@ -3,8 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Portfolio App{% endblock %}</title>
+    <!-- <title>{% block title %}Portfolio App{% endblock %}</title> -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
+    <title>📈 Portfolio App</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
+
     <style>
       .flash-success {
         background-color: #d1e7dd;
@@ -20,20 +23,80 @@
         border-radius: 5px;
         margin-bottom: 1em;
       }
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .button {
+        padding: 4px 10px;
+        font-size: 0.9em;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s ease;
+      }
+
+      .button:hover {
+        opacity: 0.85;
+        cursor: pointer;
+      }
+
+      .button[title]::after {
+        content: attr(title);
+        display: none;
+      }
+      .active {
+        font-weight: bold;
+        color: #007bff;
+        border-bottom: 2px solid #007bff;
+      }
+      /* responsive sidebar styling  */
+      @media (max-width: 768px) {
+        .button-group {
+          flex-direction: column;
+        }
+
+        ul.navbar {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        ul.navbar li a {
+          padding: 6px 10px;
+          display: block;
+          background: #f8f9fa;
+          border-radius: 4px;
+        }
+      }
     </style>
   </head>
   <body>
             {% if current_user.is_authenticated %}
         <nav>
+          <header style="display:flex; align-items:center; gap:10px;">
+            <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:80px;"> -->
+            <a href="{{ url_for('trades.dashboard') }}">
+              <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:75px;">
+            </a>
+           
+          </header>
+          
           <ul>
-            <li><strong>Portfolio App</strong></li>
+            <li><a href="{{ url_for('trades.dashboard') }}"
+                  class="{% if request.endpoint == 'trades.dashboard' %}active{% endif %}">🏠 Dashboard</a></li>
+            <li><a href="{{ url_for('trades.add_trade') }}"
+                  class="{% if request.endpoint == 'trades.add_trade' %}active{% endif %}">➕ Add Trade</a></li>
+            <li><a href="{{ url_for('trades.trade_history') }}"
+                  class="{% if request.endpoint == 'trades.trade_history' %}active{% endif %}">📜 Trades History</a></li>
+            <li><a href="{{ url_for('stats.stats_dashboard') }}"
+                  class="{% if request.endpoint == 'stats.stats_dashboard' %}active{% endif %}">📊 Stats</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">🚪 Logout</a></li>
           </ul>
-          <ul>
-            <li><a href="{{ url_for('trades.dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('trades.add_trade') }}">Add Trade</a></li>
-            <li><a href="{{ url_for('trades.trade_history') }}">Trades History</a></li>
-            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-          </ul>
+
         </nav>
         {% endif %}
 
