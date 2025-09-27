@@ -1,0 +1,9 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div style="text-align:center; margin-top:50px;">
+  <h1>👋 Welcome to Your Portfolio App</h1>
+  <p>This is your root page. You can customize it later.</p>
+  <a href="{{ url_for('resources.show_resources') }}" class="button">Go to Resources</a>
+</div>
+{% endblock %}

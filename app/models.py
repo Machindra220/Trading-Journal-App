@@ -67,3 +67,15 @@ class TradeExit(db.Model):
     exit_amount = db.Column(db.Numeric, nullable=False, server_default=db.FetchedValue())
     note = db.Column(db.Text)  # ✅ Trade Exit Note
 
+class Resource(db.Model):
+    __tablename__ = 'resources'  # ✅ Match your actual table name
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    url = db.Column(db.String(255), nullable=False)
+    note = db.Column(db.Text)
+    category = db.Column(db.String(50))
+    tags = db.Column(db.String(100))
+    pinned = db.Column(db.Boolean, default=False)
+    last_accessed = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # ✅ match your users table
