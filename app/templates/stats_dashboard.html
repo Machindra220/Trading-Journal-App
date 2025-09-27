@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Trading Stats{% endblock %}
+{% block content %}
+<h2>📊 Trading Performance Overview</h2>
+
+<!-- 🔍 loading-spinner -->
+<div id="loading-spinner" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+     z-index:9999; background:white; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+  <div class="spinner" style="width:40px; height:40px; border:4px solid #ccc; border-top:4px solid #007bff;
+       border-radius:50%; animation:spin 1s linear infinite;"></div>
+  <p style="margin-top:10px; font-size:0.9em; color:#333;">Loading…</p>
+</div>
+
+<!-- 🔍 Time Filter Dropdown -->
+<form method="GET" action="{{ url_for('stats.stats_dashboard') }}" style="margin-bottom:20px;">
+  <label for="range" title="Select time range for performance stats">📅 Time Filter</label>
+  <select name="range" id="range" onchange="this.form.submit()">
+    <option value="all_time" {% if request.args.get('range') == 'all_time' %}selected{% endif %}>All Time</option>
+    <option value="last_7_days" {% if request.args.get('range') == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+    <option value="last_30_days" {% if request.args.get('range') == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+    <option value="last_90_days" {% if request.args.get('range') == 'last_90_days' %}selected{% endif %}>Last 90 Days</option>
+    <option value="ytd" {% if request.args.get('range') == 'ytd' %}selected{% endif %}>Year to Date</option>
+    <option value="last_year" {% if request.args.get('range') == 'last_year' %}selected{% endif %}>Last Year</option>
+  </select>
+</form>
+
+<!-- 🏷️ Active Filter Label -->
+<p style="color:#555;">Showing stats for: <strong>{{ request.args.get('range', 'All Time')|replace('_', ' ')|title }}</strong></p>
+<div class="button-group">
+  <a href="{{ url_for('stats.refresh_stats', range=request.args.get('range', 'all_time')) }}"
+     class="button" style="background:#ffc107; color:black;" title="Recompute stats">
+     🔄 Refresh Stats
+  </a>
+
+  <a href="{{ url_for('export.export_history', range=request.args.get('range', 'all_time'), format='excel') }}"
+     class="button" style="background:#28a745; color:white;" title="Download trades + metrics">
+     📤 Excel Export
+  </a>
+
+  <a href="{{ url_for('export.export_history', range=request.args.get('range', 'all_time'), format='pdf') }}"
+     class="button" style="background:#dc3545; color:white;" title="Download trades + metrics">
+     🧾 PDF Export
+  </a>
+
+  <a href="{{ url_for('export.export_stats_only', range=request.args.get('range', 'all_time'), format='excel') }}"
+     class="button" style="background:#17a2b8; color:white;" title="Download metrics only">
+     📊 Metrics (Excel)
+  </a>
+
+  <a href="{{ url_for('export.export_stats_only', range=request.args.get('range', 'all_time'), format='pdf') }}"
+     class="button" style="background:#6f42c1; color:white;" title="Download metrics only">
+     📊 Metrics (PDF)
+  </a>
+  <button onclick="window.print()" class="button" style="background:#6c757d; color:white;">
+    🖨️ Print / Save as PDF
+  </button>
+</div>
+
+
+
+<hr></hr>
+<p style="font-size: 0.9em; color: gray;">
+  📅 Stats last computed: {{ last_computed }}
+</p>
+
+<!-- 🔢 Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card green" title="Total profit/loss from closed trades">
+    <h4>Realized P&L</h4>
+    <p>₹{{ "%.2f"|format(realized_pnl) }}</p>
+  </div>
+  <div class="stat-card blue" title="Trades still open">
+    <h4>Open Trades</h4>
+    <p>{{ open_trades }}</p>
+  </div>
+  <div class="stat-card gray" title="Trades that are closed">
+    <h4>Closed Trades</h4>
+    <p>{{ closed_trades }}</p>
+  </div>
+</div>
+
+<!-- 📈 Performance Metrics -->
+<div class="stats-grid">
+  <div class="stat-card orange" title="Percentage of winning trades">
+    <h4>Win Rate</h4>
+    <p>{{ win_rate }}%</p>
+  </div>
+  <div class="stat-card orange" title="Average profit per trade">
+    <h4>Expectancy</h4>
+    <p>₹{{ expectancy }}</p>
+  </div>
+  <div class="stat-card orange" title="Ratio of gross profit to gross loss">
+    <h4>Profit Factor</h4>
+    <p>{{ profit_factor }}</p>
+  </div>
+</div>
+
+<!-- ⏳ Holding Durations -->
+<div class="stats-grid">
+  <div class="stat-card blue" title="Average duration of winning trades">
+    <h4>Avg Win Hold</h4>
+    <p>{{ avg_win_hold }} Days</p>
+  </div>
+  <div class="stat-card blue" title="Average duration of losing trades">
+    <h4>Avg Loss Hold</h4>
+    <p>{{ avg_loss_hold }} Days</p>
+  </div>
+</div>
+
+<!-- 💰 Win/Loss Amounts -->
+<div class="stats-grid">
+  <div class="stat-card green" title="Average profit from winning trades">
+    <h4>Avg Win</h4>
+    <p>₹{{ avg_win }}</p>
+  </div>
+  <div class="stat-card red" title="Average loss from losing trades">
+    <h4>Avg Loss</h4>
+    <p>₹{{ avg_loss }}</p>
+  </div>
+</div>
+
+<!-- 🔁 Streaks -->
+<div class="stats-grid">
+  <div class="stat-card gray" title="Longest consecutive wins">
+    <h4>Win Streak</h4>
+    <p>{{ win_streak }}</p>
+  </div>
+  <div class="stat-card gray" title="Longest consecutive losses">
+    <h4>Loss Streak</h4>
+    <p>{{ loss_streak }}</p>
+  </div>
+</div>
+
+<!-- 📊 Volume & Drawdown -->
+<div class="stats-grid">
+  <div class="stat-card gray" title="Average daily trading volume">
+    <h4>Avg Daily Vol</h4>
+    <p>{{ avg_daily_vol }}</p>
+  </div>
+  <div class="stat-card gray" title="Average trade size">
+    <h4>Avg Size</h4>
+    <p>{{ avg_size }}</p>
+  </div>
+  <div class="stat-card red" title="Maximum drop from peak equity">
+    <h4>Max Drawdown</h4>
+    <p>₹{{ max_drawdown }}</p>
+  </div>
+</div>
+
+<!-- 📈 Most Traded Stocks -->
+<div class="stat-card wide gray" title="Stocks traded most frequently and their total P&L">
+  <h4>📈 Most Traded Stocks</h4>
+  <ul>
+    {% for stock, data in stock_stats.items() %}
+      <li>{{ stock }} ({{ data.count }} trades): ₹{{ "%.2f"|format(data.pnl) }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- 📉 Equity Curve Graph -->
+<h3 style="margin-top:40px;">📉 Equity Curve</h3>
+<canvas id="equityCurveChart" style="max-width:100%; height:300px;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const equityData = {{ equity_curve | tojson }};
+  const labels = equityData.map(point => point.date);
+  const values = equityData.map(point => point.value);
+
+  const ctx = document.getElementById('equityCurveChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Account Value',
+        data: values,
+        borderColor: '#007bff',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return '₹' + context.parsed.y.toFixed(2);
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Date' }},
+        y: { title: { display: true, text: 'Equity (₹)' }, beginAtZero: false }
+      }
+    }
+  });
+</script>
+
+<!-- 💅 Stat Card Styling -->
+<style>
+  .stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .stat-card {
+    flex: 1 1 200px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+  .stat-card h4 {
+    margin-bottom: 8px;
+    font-size: 1em;
+    color: #333;
+  }
+  .stat-card p {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  .stat-card.green { background-color: #e6f4ea; }
+  .stat-card.red { background-color: #fbeaea; }
+  .stat-card.blue { background-color: #eaf2fb; }
+  .stat-card.orange { background-color: #fff4e5; }
+  .stat-card.gray { background-color: #f1f1f1; }
+  .stat-card.wide { flex: 1 1 100%; }
+</style>
+{% endblock %}

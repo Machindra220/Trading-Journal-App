@@ -40,6 +40,9 @@
       <a href="{{ url_for('trades.export_history', stock=selected_stock, date_range=selected_range, sort=sort) }}"
          class="button" title="Download filtered trades as Excel"
          style="text-decoration:none; padding:4px 22px; background:#007bff; color:white; border-radius:4px;">📤 Export</a>
+           <button onclick="window.print()" class="button" style="background:#6c757d; color:white;">
+            🖨️ Print / Save as PDF
+      </button>
     </div>
 
   </div>
