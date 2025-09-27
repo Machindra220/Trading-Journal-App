@@ -30,7 +30,9 @@
        class="{% if request.endpoint == 'notes.notes_page' %}active{% endif %}">📝 Notes</a></li>
       <li><a href="{{ url_for('stats.stats_dashboard') }}"
              class="{% if request.endpoint == 'stats.stats_dashboard' %}active{% endif %}">📊 Stats</a></li>
-             
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('calendar.calendar_view') }}">📅 Calendar</a>
+      </li>
 
       <li><a href="{{ url_for('auth.logout') }}">🚪 Logout</a></li>
     </ul>
