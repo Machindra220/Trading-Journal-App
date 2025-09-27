@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resources.css') }}">
+
+<h2>🧰 Helpful Resources</h2>
+
+<!-- ✅ Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, msg in messages %}
+      <div class="flash-{{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- ➕ Add Resource Button -->
+<button onclick="openAddModal()" class="button primary">➕ Add Resource</button>
+
+<hr>
+
+<!-- 📋 Resources Table -->
+<table class="resource-table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Category</th>
+      <th>Note</th>
+      <th>Pinned</th>
+      <th>Last Accessed</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in resources %}
+    <tr>
+      <td>
+        <img src="https://www.google.com/s2/favicons?domain={{ r.url }}" class="favicon">
+        <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>
+      </td>
+      <td>{{ r.category }}</td>
+      <td>{{ r.note }}</td>
+      <td>{{ '📌' if r.pinned else '' }}</td>
+      <td>{{ r.last_accessed or '—' }}</td>
+      <td>
+        <button onclick="openEditModal({{ r.id }}, '{{ r.title }}', '{{ r.url }}', '{{ r.category }}', `{{ r.note|escape }}`, {{ 'true' if r.pinned else 'false' }})">✏️ Edit</button>
+        <form method="POST" action="{{ url_for('resources.delete_resource', id=r.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" onclick="return confirm('Delete this resource?')">🗑️</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- ✏️ Add/Edit Modal -->
+<div id="resource-modal" class="modal">
+  <form method="POST" id="resource-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="title" id="modal-title" placeholder="Title" required>
+    <input name="url" id="modal-url" placeholder="URL" required>
+
+    <label>Category</label>
+    <select name="category" id="modal-category">
+      <option value="">-- Select Existing --</option>
+      {% for cat in categories %}
+        <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Or Add New Category</label>
+    <input name="new_category" id="modal-new-category" placeholder="New Category">
+
+    <textarea name="note" id="modal-note" placeholder="Note"></textarea>
+    <label><input type="checkbox" name="pinned" id="modal-pinned"> 📌 Pin</label>
+
+    <div class="modal-actions">
+      <button type="submit">💾 Save</button>
+      <button type="button" onclick="closeModal()">❌ Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function openAddModal() {
+  const form = document.getElementById('resource-form');
+  form.action = "{{ url_for('resources.add_resource') }}";
+  form.reset();
+  document.getElementById('resource-modal').style.display = 'block';
+}
+
+function openEditModal(id, title, url, category, note, pinned) {
+  const form = document.getElementById('resource-form');
+  form.action = `/resources/edit/${id}`;
+  document.getElementById('modal-title').value = title;
+  document.getElementById('modal-url').value = url;
+  document.getElementById('modal-category').value = category;
+  document.getElementById('modal-note').value = note;
+  document.getElementById('modal-pinned').checked = pinned;
+  document.getElementById('resource-modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('resource-modal').style.display = 'none';
+}
+</script>
+{% endblock %}

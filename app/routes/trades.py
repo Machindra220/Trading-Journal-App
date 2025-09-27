@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
 from app.models import Trade, TradeEntry, TradeExit
-from app import db
+# from app import db
+from app.extensions import db
 from datetime import date, timedelta
 import pandas as pd
 from io import BytesIO
