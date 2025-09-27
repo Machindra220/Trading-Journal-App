@@ -79,3 +79,18 @@ class Resource(db.Model):
     pinned = db.Column(db.Boolean, default=False)
     last_accessed = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # ✅ match your users table
+
+class DayNote(db.Model):
+    __tablename__ = 'day_notes'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    summary = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    images = db.relationship('NoteImage', backref='note', cascade='all, delete-orphan')
+
+class NoteImage(db.Model):
+    __tablename__ = 'note_images'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    note_id = db.Column(db.Integer, db.ForeignKey('day_notes.id'))
