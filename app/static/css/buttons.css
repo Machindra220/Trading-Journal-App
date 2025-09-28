@@ -86,4 +86,8 @@
         border-radius: 4px;
       }
     }
+#stock_name {
+  text-transform: uppercase;
+}
+
  
