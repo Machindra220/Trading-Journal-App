@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2>My Trades</h2>
+<h2>My Trades <span style="font-size:1rem; color:#555;">— Total Invested: ₹{{ total_invested }}</span></h2>
+
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
