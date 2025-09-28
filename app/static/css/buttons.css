@@ -89,5 +89,30 @@
 #stock_name {
   text-transform: uppercase;
 }
+.pinned-toolbar {
+  display: flex;
+  flex-direction: column;
+}
+
+.pinned-toolbar .btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+table.compact-table td,
+table.compact-table th {
+  padding: 6px 10px;
+  line-height: 1.2;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+table.compact-table {
+  border-collapse: collapse;
+}
+table.compact-table tr {
+  height: auto;
+}
 
  

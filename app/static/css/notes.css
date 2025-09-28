@@ -130,3 +130,21 @@
 .note-actions {
   text-align: right;
 }
+
+.notes-wrapper {
+  margin-top: 1rem;
+}
+
+.note-card {
+  background-color: #fdfdfd;
+}
+
+.note-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-images img {
+  max-height: 120px;
+  object-fit: cover;
+}

@@ -47,19 +47,24 @@ def add_note():
     flash("Note added successfully!", "success")
     return redirect(url_for('notes.notes_page'))
 
-@notes_bp.route('/notes/edit/<int:id>', methods=['POST'])
+# Edit Note Route
+@notes_bp.route('/notes/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_note(id):
     note = DayNote.query.get_or_404(id)
     if note.user_id != current_user.id:
         abort(403)
 
-    note.date = request.form.get('date')
-    note.summary = request.form.get('summary')
-    note.content = request.form.get('content')
-    db.session.commit()
-    flash("Note updated successfully!", "success")
-    return redirect(url_for('notes.notes_page'))
+    if request.method == 'POST':
+        note.date = request.form.get('date')
+        note.summary = request.form.get('summary')
+        note.content = request.form.get('content')
+        db.session.commit()
+        flash("Note updated successfully!", "success")
+        return redirect(url_for('notes.notes_page'))
+
+    return render_template('edit_note.html', note=note)
+
 
 @notes_bp.route('/notes/delete/<int:id>', methods=['POST'])
 @login_required
