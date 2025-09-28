@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app.models import Trade, TradeEntry, TradeExit
 # from app import db
 from app.extensions import db
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import pandas as pd
 from io import BytesIO
 
@@ -19,26 +19,28 @@ def dashboard():
     trades = Trade.query.filter_by(user_id=current_user.id).all()
 
     trade_data = []
+    total_invested_open = 0  # ✅ Track total invested in open trades
+
     for trade in trades:
         total_invested = sum(e.invested_amount for e in trade.entries)
         total_exited = sum(e.exit_amount for e in trade.exits)
-
-        # Use status from DB directly
         status = trade.status
 
         # Only calculate P&L if trade is closed
         pnl = total_exited - total_invested if status == "Closed" else None
 
-        trade_data.append({
-            'id': trade.id,
-            'stock_name': trade.stock_name,
-            'status': status,
-            'total_invested': float(total_invested),
-            'total_exited': float(total_exited),
-            'pnl': float(pnl) if pnl is not None else None
-        })
+        if status == "Open":
+            trade_data.append({
+                'id': trade.id,
+                'stock_name': trade.stock_name,
+                'status': status,
+                'total_invested': float(total_invested),
+                'total_exited': float(total_exited),
+                'pnl': None  # Open trades don't show P&L
+            })
+            total_invested_open += total_invested  # ✅ Accumulate open trade investment
 
-    return render_template('dashboard.html', trades=trade_data)
+    return render_template('dashboard.html', trades=trade_data, total_invested=total_invested_open)
 
 
 
@@ -453,8 +455,6 @@ def trade_history():
                            selected_range=date_range,
                            sort=sort_order)
 
-
-#export logic
 @trades_bp.route('/history/export')
 @login_required
 def export_history():
@@ -496,6 +496,8 @@ def export_history():
         entry_notes = [e.note for e in trade.entries if e.note]
         exit_notes = [x.note for x in trade.exits if x.note]
         combined_notes = " | ".join(entry_notes + exit_notes)
+        date_stamp = datetime.now().strftime('%d-%b-%Y')
+        filename = f"trades_{date_stamp}.xlsx"
 
         data.append({
             'Stock Name': trade.stock_name.upper(),
@@ -508,3 +510,22 @@ def export_history():
             'Realized P&L': realized_pnl,
             'Notes': combined_notes
         })
+
+    # ✅ Export logic must be outside the loop
+    df = pd.DataFrame(data)
+
+    if sort_order == 'asc':
+        df = df.sort_values(by='Realized P&L', ascending=True)
+    else:
+        df = df.sort_values(by='Realized P&L', ascending=False)
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Trade History')
+
+    output.seek(0)
+
+    return send_file(output,
+                     download_name=filename,
+                 as_attachment=True,
+                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
