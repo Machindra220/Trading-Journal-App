@@ -4,6 +4,7 @@ from io import BytesIO
 import pandas as pd
 from app.models import Resource
 from app.extensions import db  # ✅ Use extensions to avoid circular import
+from datetime import datetime
 
 resources_bp = Blueprint('resources', __name__)
 
@@ -86,3 +87,12 @@ def export_resources():
         df.to_excel(writer, index=False, sheet_name='Resources')
     output.seek(0)
     return send_file(output, download_name='resources.xlsx', as_attachment=True)
+
+#last access time of resource
+@resources_bp.route('/resources/access/<int:id>')
+@login_required
+def access_resource(id):
+    resource = Resource.query.get_or_404(id)
+    resource.last_accessed = datetime.utcnow()
+    db.session.commit()
+    return redirect(resource.url)

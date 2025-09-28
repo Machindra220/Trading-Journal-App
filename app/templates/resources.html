@@ -19,7 +19,7 @@
 <hr>
 
 <!-- 📋 Resources Table -->
-<table class="resource-table">
+<table class="table compact-table">
   <thead>
     <tr>
       <th>Title</th>
@@ -35,19 +35,35 @@
     <tr>
       <td>
         <img src="https://www.google.com/s2/favicons?domain={{ r.url }}" class="favicon">
-        <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>
+        <a href="{{ url_for('resources.access_resource', id=r.id) }}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Access {{ r.title }} and update last used time">
+          {{ r.title }}
+        </a>
       </td>
       <td>{{ r.category }}</td>
       <td>{{ r.note }}</td>
       <td>{{ '📌' if r.pinned else '' }}</td>
-      <td>{{ r.last_accessed or '—' }}</td>
-      <td>
-        <button onclick="openEditModal({{ r.id }}, '{{ r.title }}', '{{ r.url }}', '{{ r.category }}', `{{ r.note|escape }}`, {{ 'true' if r.pinned else 'false' }})">✏️ Edit</button>
-        <form method="POST" action="{{ url_for('resources.delete_resource', id=r.id) }}" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" onclick="return confirm('Delete this resource?')">🗑️</button>
-        </form>
-      </td>
+      <td>{{ r.last_accessed.strftime('%d-%m-%Y %H:%M') if r.last_accessed else '—' }}</td>
+        <td style="white-space: nowrap;">
+          <div style="display: inline-flex; gap: 6px; align-items: center;">
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    onclick="openEditModal({{ r.id }}, '{{ r.title }}', '{{ r.url }}', '{{ r.category }}', `{{ r.note|escape }}`, {{ 'true' if r.pinned else 'false' }})">
+              ✏️
+            </button>
+
+            <form method="POST" action="{{ url_for('resources.delete_resource', id=r.id) }}" style="margin: 0;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit"
+                      class="btn btn-sm btn-outline-danger"
+                      onclick="return confirm('Delete this resource?')">
+                🗑️
+              </button>
+            </form>
+          </div>
+        </td>
     </tr>
     {% endfor %}
   </tbody>
