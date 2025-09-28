@@ -3,6 +3,11 @@ from config import Config
 from flask_login import current_user
 from app.extensions import db, login_manager, csrf, cache
 from app.models import Resource
+from dotenv import load_dotenv
+load_dotenv()
+
+# app.config.from_object(Config)
+
 
 def create_app():
     app = Flask(__name__)
@@ -32,11 +37,9 @@ def create_app():
     app.register_blueprint(notes_bp)
     app.register_blueprint(watchlist_bp)
 
-
     @app.route('/')
     def home():
         return render_template('home.html')
-
 
     @app.context_processor
     def inject_pinned_resources():
