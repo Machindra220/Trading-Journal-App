@@ -14,3 +14,13 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 - 🕒 Trades history Page
 - 🕒 Notes page 
 - 🕒 Simple statistics for our trading performance tracking
+
+## 🚀 Getting Started Steps
+
+```bash
+git clone https://github.com/Machindra220/trading-journal-app.git
+cd trading-journal-app
+pip install -r requirements.txt
+flask run
+```
+Make sure to add secrets to your .env file.
