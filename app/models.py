@@ -1,7 +1,9 @@
-from app import db
+from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, date
+
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -24,18 +26,13 @@ class Trade(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     stock_name = db.Column(db.String(20), nullable=False)
-
     entry_note = db.Column(db.Text)  # Optional note at entry
     journal = db.Column(db.Text)     # Optional summary or combined notes
-
     entry_date = db.Column(db.Date)  # First buy date
     exit_date = db.Column(db.Date)   # Final sell date
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(10), nullable=False, default="Open")
-
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
     entries = db.relationship('TradeEntry', backref='trade', lazy=True)
     exits = db.relationship('TradeExit', backref='trade', lazy=True)
     @property
@@ -48,8 +45,6 @@ class Trade(db.Model):
 
         return round(total_exit - total_entry, 2)
 
-
-
 class TradeEntry(db.Model):
     __tablename__ = 'trade_entries'
     id = db.Column(db.Integer, primary_key=True)
@@ -57,22 +52,15 @@ class TradeEntry(db.Model):
     price = db.Column(db.Float, nullable=False)
     date = db.Column(db.Date, nullable=False)
     trade_id = db.Column(db.Integer, db.ForeignKey('trades.id'), nullable=False)
-
-    # Remove insertable=False — just define the column normally
-    # invested_amount = db.Column(db.Float)
     invested_amount = db.Column(db.Numeric, nullable=False, server_default=db.FetchedValue())
     note = db.Column(db.Text)  # ✅ Trade entry Note
-
-
 
 class TradeExit(db.Model):
     __tablename__ = 'trade_exits'
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
-    # exit_amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.Date, nullable=False)
-
     trade_id = db.Column(db.Integer, db.ForeignKey('trades.id'), nullable=False)
     exit_amount = db.Column(db.Numeric, nullable=False, server_default=db.FetchedValue())
     note = db.Column(db.Text)  # ✅ Trade Exit Note
@@ -104,3 +92,22 @@ class NoteImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255), nullable=False)
     note_id = db.Column(db.Integer, db.ForeignKey('day_notes.id'))
+
+
+class Watchlist(db.Model):
+    __tablename__ = 'watchlist'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    stock_name = db.Column(db.String(50), nullable=False)
+    target_price = db.Column(db.Numeric(10, 2), nullable=False)
+    stop_loss = db.Column(db.Numeric(10, 2), nullable=False)
+    expected_move = db.Column(db.Numeric(10, 2), nullable=False)
+    setup_type = db.Column(db.String(30), nullable=False)
+    confidence = db.Column(db.String(10))
+    date_added = db.Column(db.Date, nullable=False, default=date.today)
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), nullable=False, default='Open')
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    user = db.relationship('User', backref='watchlist_items')

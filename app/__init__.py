@@ -21,6 +21,7 @@ def create_app():
     from app.routes.resources import resources_bp
     from app.routes.notes import notes_bp
     from app.routes.calendar import calendar_bp
+    from app.routes.watchlist import watchlist_bp
 
     app.register_blueprint(calendar_bp)
     app.register_blueprint(auth_bp)
@@ -29,6 +30,7 @@ def create_app():
     app.register_blueprint(export_bp)
     app.register_blueprint(resources_bp, url_prefix='/resources')    
     app.register_blueprint(notes_bp)
+    app.register_blueprint(watchlist_bp)
 
 
     @app.route('/')
