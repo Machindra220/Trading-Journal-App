@@ -386,7 +386,9 @@ def delete_trade(trade_id):
         db.session.rollback()
         flash(f"Error deleting trade: {str(e)}", "error")
 
-    return redirect(url_for('trades.dashboard'))
+    return redirect(request.referrer or url_for('trades.dashboard'))
+
+    # return redirect(url_for('trades.dashboard'))
 
 #trade_history() Route
 @trades_bp.route('/history', methods=['GET'])
@@ -434,6 +436,7 @@ def trade_history():
         combined_notes = " | ".join(entry_notes + exit_notes)
 
         enriched.append({
+            'id': trade.id,  # ✅ Add this line to fetch trade.id in view button
             'stock_name': trade.stock_name.upper(),
             'entry_date': trade.entry_date,
             'exit_date': trade.exit_date,

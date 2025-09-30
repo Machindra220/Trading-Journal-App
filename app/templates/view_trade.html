@@ -98,16 +98,13 @@
               style="background-color:#007bff; color:white; padding:4px 10px; border-radius:4px; text-decoration:none; margin-right:4px;">
               ✏️ Edit
             </a>
-
             <button type="button"
                     onclick="openModal('entry-{{ e.id }}')"
                     style="background-color:#dc3545; color:white; padding:4px 10px; border-radius:4px; border:none;">
               🗑️ Delete
             </button>
           </td>
-
         </tr>
-
 
       {% endfor %}
     </tbody>
@@ -138,7 +135,7 @@
 
             <button type="button"
                     onclick="openModal('exit-{{ x.id }}')"
-                    style="background-color:#dc3545; color:white; padding:4px 10px; border-radius:4px; border:none;">
+                    style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px; border:none;  margin-right:4px;">
               🗑️ Delete
             </button>
           </td>
@@ -187,6 +184,5 @@ function closeModal() {
   document.getElementById('modal-overlay').style.display = 'none';
 }
 </script>
-
 
 {% endblock %}
