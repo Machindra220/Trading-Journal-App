@@ -45,12 +45,13 @@
       <td>{{ r.category }}</td>
       <td>{{ r.note }}</td>
       <td>{{ '📌' if r.pinned else '' }}</td>
-      <td>{{ r.last_accessed.strftime('%d-%m-%Y %H:%M') if r.last_accessed else '—' }}</td>
+      <td>{{ r.last_accessed.strftime('%d-%m-%Y') if r.last_accessed else '—' }}</td> <!-- date format - '%d-%m-%Y %H:%M'-->
         <td style="white-space: nowrap;">
           <div style="display: inline-flex; gap: 6px; align-items: center;">
             <button type="button"
                     class="btn btn-sm btn-outline-primary"
-                    onclick="openEditModal({{ r.id }}, '{{ r.title }}', '{{ r.url }}', '{{ r.category }}', `{{ r.note|escape }}`, {{ 'true' if r.pinned else 'false' }})">
+                    onclick="openEditModal({{ r.id }}, '{{ r.title }}', '{{ r.url }}', '{{ r.category }}', `{{ r.note|escape }}`, {{ 'true' if r.pinned else 'false' }})"
+                    style="background-color:#0172ad; color:white; padding:4px 10px; border-radius:4px; text-decoration:none; margin-right:4px;">
               ✏️
             </button>
 
@@ -58,7 +59,8 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit"
                       class="btn btn-sm btn-outline-danger"
-                      onclick="return confirm('Delete this resource?')">
+                      onclick="return confirm('Delete this resource?')"
+                      style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px; text-decoration:none; margin-right:4px;">
                 🗑️
               </button>
             </form>

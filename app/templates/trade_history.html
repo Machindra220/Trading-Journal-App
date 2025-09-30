@@ -35,14 +35,14 @@
       </select>
     </div>
 
-    <div style="display:flex; gap:5px; margin-top:1.5em;">
-      <button type="submit" title="Apply selected filters">🔍 Apply</button>
+    <div style="display: inline-flex; gap: 10px; margin-top: 1.5em; align-items: center;">
+      <button type="submit" title="Apply selected filters" style="padding: 6px 16px; font-size: 0.9rem; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Apply</button>
       <a href="{{ url_for('trades.export_history', stock=selected_stock, date_range=selected_range, sort=sort) }}"
          class="button" title="Download filtered trades as Excel"
-         style="text-decoration:none; padding:4px 22px; background:#007bff; color:white; border-radius:4px;">📤 Export</a>
-           <button onclick="window.print()" class="button" style="background:#6c757d; color:white;">
-            🖨️ Print / Save as PDF
-      </button>
+         style="padding: 6px 16px; font-size: 0.9rem; background-color: #17a2b8; color: white; border-radius: 4px; text-decoration: none; display: inline-block;">📤 Export</a>
+           <button onclick="window.print()" title="Print or Save as PDF" class="button" style="padding: 6px 16px; font-size: 0.9rem; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            🖨️ Print PDF
+      </button> <!-- style="display: inline-flex; gap: 6px; align-items: center;" text-decoration:none; background:#6c757d; color:white; -->
     </div>
 
   </div>
@@ -64,6 +64,7 @@
           <th>Duration</th>
           <th>Realized P&L</th>
           <th>Notes</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -84,6 +85,37 @@
               {% endif %}
             </td>
             <td>{{ t.notes or '—' }}</td>
+            <td style="white-space: nowrap;">
+              <div style="display: inline-flex; gap: 6px; align-items: center;">
+                <!-- View -->
+                <form method="GET" action="{{ url_for('trades.view_trade', trade_id=t['id']) }}" style="margin:0;">
+                  <button type="submit"
+                          class="btn btn-sm btn-outline-info"
+                          title="View Trade"
+                          style="padding: 4px 8px;">
+                    🔍
+                  </button>
+                </form>
+
+                <!-- Edit disabled on history page -->
+                <!-- <a href="{{ url_for('trades.edit_trade', trade_id=t['id']) }}"
+                  class="btn btn-sm btn-outline-primary" title="Edit">
+                  ✏️
+                </a> -->
+
+                <!-- Delete -->
+                <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=t['id']) }}" style="margin:0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit"
+                          class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Delete this trade?')"
+                          title="Delete"
+                          style="background-color:#bd5656; padding: 4px 8px; font-size: 0.875rem; line-height: 1.2;">
+                    🗑️
+                  </button>
+                </form>
+              </div>
+            </td>
           </tr>
         {% endfor %}
       </tbody>
