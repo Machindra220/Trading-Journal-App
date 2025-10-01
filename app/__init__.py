@@ -27,7 +27,9 @@ def create_app():
     from app.routes.notes import notes_bp
     from app.routes.calendar import calendar_bp
     from app.routes.watchlist import watchlist_bp
+    from app.routes.risk_calculator import risk_bp
 
+    app.register_blueprint(risk_bp, url_prefix='/tools')
     app.register_blueprint(calendar_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(trades_bp)
