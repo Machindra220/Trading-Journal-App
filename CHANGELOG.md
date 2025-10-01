@@ -28,4 +28,5 @@
 
 ## [v1.2.0] - 2025-09-30
 ### Added
-DB Schema is placed in ./app/db/schema.sql
+- DB Schema is placed in ./app/db/schema.sql
+- Risk calculator page according our investment value

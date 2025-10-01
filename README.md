@@ -15,6 +15,7 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 - 🕒 Notes page 
 - 🕒 Simple statistics for our trading performance tracking
 - 🖥️ Enhanced trade history view with action buttons (v1.1)
+- 🧮 Risk calculator according our investment value
 
 ## 🚀 Getting Started Steps
 
