@@ -51,3 +51,5 @@ def create_app():
         return dict(pinned_resources=[])
 
     return app
+#app = create_app()
+

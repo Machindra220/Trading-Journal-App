@@ -18,6 +18,9 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 
 ## 🚀 Getting Started Steps
 
+Database Schema is placed in /app/db/schema.sql
+DB can be created using that schema.sql
+
 ```bash
 git clone https://github.com/Machindra220/trading-journal-app.git
 cd trading-journal-app
