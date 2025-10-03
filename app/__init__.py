@@ -4,9 +4,9 @@ from flask_login import current_user
 from app.extensions import db, login_manager, csrf, cache
 from app.models import Resource
 from dotenv import load_dotenv
+from config import Config  # ✅ Import your config class
 load_dotenv()
 
-# app.config.from_object(Config)
 
 
 def create_app():

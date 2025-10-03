@@ -11,3 +11,4 @@ instance/
 Dockerfile
 .dockerignore
 generate_schema.py
+*.txt
