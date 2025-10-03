@@ -18,67 +18,73 @@
       <tr>
         <th>Stock</th>
         <th>Status</th>
+        <th>Avg Price</th>
+        <th>Qty</th>
         <th>Invested</th>
-        <th>Exited</th>
-        <th>P&L</th>
+        <th>Entry Date</th>
+        <th>Note</th>
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
-      {% for trade in trades %}
-        <tr>
-          <td>{{ trade.stock_name }}</td>
+      <tbody>
+        {% for trade in trades %}
+          <tr>
+            <td>{{ trade.stock_name }}</td>
 
-          <td>
-            {% if trade.status == "Closed" %}
-              <span style="background-color:#dc3545; color:white; padding:2px 6px; border-radius:4px;">Closed</span>
-            {% else %}
-              <span style="background-color:#28a745; color:white; padding:2px 6px; border-radius:4px;">Open</span>
-            {% endif %}
-          </td>
-
-          <td>₹{{ trade.total_invested }}</td>
-          <td>₹{{ trade.total_exited }}</td>
-
-          <td>
-            {% if trade.pnl is not none %}
-              {% if trade.pnl >= 0 %}
-                <span style="color:green;">₹{{ trade.pnl }}</span>
+            <td>
+              {% if trade.status == "Closed" %}
+                <span style="background-color:#dc3545; color:white; padding:2px 6px; border-radius:4px;">Closed</span>
               {% else %}
-                <span style="color:red;">₹{{ trade.pnl }}</span>
+                <span style="background-color:#28a745; color:white; padding:2px 6px; border-radius:4px;">Open</span>
               {% endif %}
-            {% else %}
-              <span style="color:gray;">—</span>
-            {% endif %}
-          </td>
-          <td style="white-space: nowrap;">
-            <div style="display: inline-flex; gap: 6px; align-items: center;">
-              <a href="{{ url_for('trades.view_trade', trade_id=trade.id) }}"
-                class="btn btn-sm btn-outline-secondary" title="View" style="padding: 4px 8px; font-size: 0.875rem; line-height: 1.2;">
-                🔍
-              </a>
+            </td>
 
-              <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
-                class="btn btn-sm btn-outline-primary" title="Edit" style="padding: 4px 8px; font-size: 0.875rem; line-height: 1.2;">
-                ✏️
-              </a>
+            <td>{{ trade.avg_entry_price }}</td>
+            <td>{{ trade.quantity }}</td>
+            <td>₹{{ trade.total_invested }}</td>
+            <td>{{ trade.entry_date }}</td>
+            <td>{{ trade.note }}</td>
+            
 
-              <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=trade.id) }}" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"
-                        class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('Delete this trade?')"
-                        title="Delete"
-                        style="background-color:#bd5656; padding: 4px 8px; font-size: 0.875rem; line-height: 1.2;">
-                  🗑️
-                </button>
-              </form>
-            </div>
-          </td>
+            <td style="white-space: nowrap; vertical-align: middle;">
+              <div style="display: inline-flex; gap: 6px; align-items: center;">
+                <!-- View -->
+                <form method="GET" action="{{ url_for('trades.view_trade', trade_id=trade.id) }}" style="margin:0;">
+                  <button type="submit"
+                          class="btn btn-sm btn-outline-secondary"
+                          title="View Trade"
+                          style="background-color:#6c757d; color:white; padding:4px 10px; border-radius:4px;">
+                    🔍
+                  </button>
+                </form>
 
-        </tr>
-      {% endfor %}
-    </tbody>
+                <!-- Edit -->
+                <form method="GET" action="{{ url_for('trades.edit_trade', trade_id=trade.id) }}" style="margin:0;">
+                  <button type="submit"
+                          class="btn btn-sm btn-outline-primary"
+                          title="Edit Trade"
+                          style="background-color:#0172ad; color:white; padding:4px 10px; border-radius:4px;">
+                    ✏️
+                  </button>
+                </form>
+
+                <!-- Delete -->
+                <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=trade.id) }}" style="margin:0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit"
+                          class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Delete this trade?')"
+                          title="Delete Trade"
+                          style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px;">
+                    🗑️
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
   </table>
 {% else %}
   <p>No trades yet. Start by adding one!</p>
@@ -105,6 +111,5 @@ function openTradeModal(button) {
   overlay.style.display = 'block';
 }
 </script>
-
 
 {% endblock %}

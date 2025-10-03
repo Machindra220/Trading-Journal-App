@@ -30,3 +30,5 @@
 ### Added
 - DB Schema is placed in ./app/db/schema.sql
 - Risk calculator page according our investment value
+- Button size inconsistencies updated to all pages
+- Modified dashboard page table view columns

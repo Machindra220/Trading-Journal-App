@@ -12,22 +12,26 @@ from io import BytesIO
 
 trades_bp = Blueprint('trades', __name__)
 
-# Dashboard Route
+#Dashboard Route
 @trades_bp.route('/dashboard')
 @login_required
 def dashboard():
     trades = Trade.query.filter_by(user_id=current_user.id).all()
 
     trade_data = []
-    total_invested_open = 0  # ✅ Track total invested in open trades
+    total_invested_open = 0
 
     for trade in trades:
         total_invested = sum(e.invested_amount for e in trade.entries)
-        total_exited = sum(e.exit_amount for e in trade.exits)
+        total_quantity = sum(e.quantity for e in trade.entries)
         status = trade.status
+        avg_entry_price = round(total_invested / total_quantity, 2) if total_quantity > 0 else '—'
 
-        # Only calculate P&L if trade is closed
-        pnl = total_exited - total_invested if status == "Closed" else None
+        # Get first entry (if any)
+        first_entry = trade.entries[0] if trade.entries else None
+        quantity = first_entry.quantity if first_entry else '—'
+        entry_date = first_entry.date.strftime('%d %b %Y') if first_entry else '—'
+        note = first_entry.note if first_entry and first_entry.note else '—'
 
         if status == "Open":
             trade_data.append({
@@ -35,13 +39,14 @@ def dashboard():
                 'stock_name': trade.stock_name,
                 'status': status,
                 'total_invested': float(total_invested),
-                'total_exited': float(total_exited),
-                'pnl': None  # Open trades don't show P&L
+                'quantity': quantity,
+                'entry_date': entry_date,
+                'note': note,
+                'avg_entry_price': avg_entry_price
             })
-            total_invested_open += total_invested  # ✅ Accumulate open trade investment
+            total_invested_open += total_invested
 
     return render_template('dashboard.html', trades=trade_data, total_invested=total_invested_open)
-
 
 
 #Backend Route: add_trade

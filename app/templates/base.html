@@ -32,7 +32,7 @@
       <li><a href="{{ url_for('resources.show_resources') }}"
        class="{% if request.endpoint == 'resources.show_resources' %}active{% endif %}">🧰 Resources</a></li>
        <li> <a href="{{ url_for('risk.risk_calculator') }}" 
-        class="{% if request.endpoint == 'resources.show_resources' %}active{% endif %}">🧮 Qty Calculator</a> </li>
+        class="{% if request.endpoint == 'risk.risk_calculator' %}active{% endif %}">🧮 Qty Calculator</a> </li>
 
        <li><a href="{{ url_for('notes.notes_page') }}"
        class="{% if request.endpoint == 'notes.notes_page' %}active{% endif %}">📝 Notes</a></li>

@@ -37,7 +37,7 @@
 
 <h3>Buy Entry</h3>
 <fieldset>
-  <legend>Buy Entry</legend>
+  <!-- <legend>Buy Entry</legend> -->
 <form method="POST" action="{{ url_for('trades.add_entry', trade_id=trade.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF Token -->
   <label for="buy_quantity">Quantity</label>
@@ -58,7 +58,7 @@
 
 <h3>Sell Exit</h3>
 <fieldset>
-  <legend>Sell Exit</legend>
+  <!-- <legend>Sell Exit</legend> -->
 <form method="POST" action="{{ url_for('trades.add_exit', trade_id=trade.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF Token -->
   <label for="sell_quantity">Quantity</label>
@@ -78,12 +78,12 @@
 </fieldset>
 
 <hr />
-
+<!-- Buy History Actions -->
 <h3>Buy History</h3>
 {% if entries %}
-  <table>
+  <table style="width: 100%; table-layout: auto;">
     <thead>
-      <tr><th>Date</th><th>Qty</th><th>Price</th><th>Invested</th></tr>
+      <tr><th>Date</th><th>Qty</th><th>Price</th><th>Invested</th><th>Note</th><th>Actions</th></tr>
     </thead>
     <tbody>
       {% for e in entries %}
@@ -93,17 +93,33 @@
           <td>₹{{ e.price }}</td>
           <td>₹{{ e.invested_amount }}</td>
           <td>{{ e.note or '—' }}</td>
-          <td>
-            <a href="{{ url_for('trades.edit_entry', entry_id=e.id) }}"
-              style="background-color:#007bff; color:white; padding:4px 10px; border-radius:4px; text-decoration:none; margin-right:4px;">
-              ✏️ Edit
-            </a>
-            <button type="button"
-                    onclick="openModal('entry-{{ e.id }}')"
-                    style="background-color:#dc3545; color:white; padding:4px 10px; border-radius:4px; border:none;">
-              🗑️ Delete
-            </button>
+          <td style="white-space: nowrap; vertical-align: middle;">
+            <div style="display: inline-flex; gap: 6px; align-items: center;">
+              <!-- Edit Entry -->
+              <form method="GET" action="{{ url_for('trades.edit_entry', entry_id=e.id) }}" style="margin:0;">
+                <button type="submit"
+                        class="btn btn-sm btn-outline-primary"
+                        title="Edit Entry"
+                        style="background-color:#0172ad; color:white; padding:4px 10px; border-radius:4px;">
+                  ✏️
+                </button>
+              </form>
+
+              <!-- Delete Entry -->
+              <form method="POST" action="{{ url_for('trades.delete_entry', entry_id=e.id) }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Delete this entry?')"
+                        title="Delete Entry"
+                        style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px;">
+                  🗑️
+                </button>
+              </form>
+            </div>
           </td>
+
+
         </tr>
 
       {% endfor %}
@@ -113,11 +129,12 @@
   <p>No buy entries yet.</p>
 {% endif %}
 
+<!-- Sell History Actions -->
 <h3>Sell History</h3>
 {% if exits %}
-  <table>
+  <table style="width: 100%; table-layout: auto;">
     <thead>
-      <tr><th>Date</th><th>Qty</th><th>Price</th><th>Exited</th></tr>
+      <tr><th>Date</th><th>Qty</th><th>Price</th><th>Exited</th><th>Note</th><th>Actions</th></tr>
     </thead>
     <tbody>
       {% for x in exits %}
@@ -127,17 +144,30 @@
           <td>₹{{ x.price }}</td>
           <td>₹{{ x.exit_amount }}</td>
           <td>{{ x.note or '—' }}</td>
-          <td>
-            <a href="{{ url_for('trades.edit_exit', exit_id=x.id) }}"
-              style="background-color:#007bff; color:white; padding:4px 10px; border-radius:4px; text-decoration:none; margin-right:4px;">
-              ✏️ Edit
-            </a>
+          <td style="white-space: nowrap; vertical-align: middle;">
+            <div style="display: inline-flex; gap: 6px; align-items: center;">
+              <!-- Edit Exit -->
+              <form method="GET" action="{{ url_for('trades.edit_exit', exit_id=x.id) }}" style="margin:0;">
+                <button type="submit"
+                        class="btn btn-sm btn-outline-primary"
+                        title="Edit Exit"
+                        style="background-color:#0172ad; color:white; padding:4px 10px; border-radius:4px;">
+                  ✏️
+                </button>
+              </form>
 
-            <button type="button"
-                    onclick="openModal('exit-{{ x.id }}')"
-                    style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px; border:none;  margin-right:4px;">
-              🗑️ Delete
-            </button>
+              <!-- Delete Exit -->
+              <form method="POST" action="{{ url_for('trades.delete_exit', exit_id=x.id) }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Delete this exit?')"
+                        title="Delete Exit"
+                        style="background-color:#bd5656; color:white; padding:4px 10px; border-radius:4px;">
+                  🗑️
+                </button>
+              </form>
+            </div>
           </td>
 
         </tr>
@@ -156,7 +186,7 @@
     <form id="modal-form" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" style="background-color:#dc3545; color:white; padding:6px 12px; border:none; border-radius:4px;">Yes, Delete</button>
-      <button type="button" onclick="closeModal()" style="margin-left:10px; padding:6px 12px;">Cancel</button>
+      <button type="button" onclick="closeModal()" style="margin-left:10px; padding:2px 12px;">Cancel</button>
     </form>
   </div>
 </div>
