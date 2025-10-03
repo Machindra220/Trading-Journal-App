@@ -25,3 +25,10 @@
 ### Fixed
 - Button size inconsistencies between view and delete
 - Internal server error from missing `id` in enriched dictionary
+
+## [v1.2.0] - 2025-09-30
+### Added
+- DB Schema is placed in ./app/db/schema.sql
+- Risk calculator page according our investment value
+- Button size inconsistencies updated to all pages
+- Modified dashboard page table view columns

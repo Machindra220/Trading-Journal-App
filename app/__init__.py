@@ -4,9 +4,9 @@ from flask_login import current_user
 from app.extensions import db, login_manager, csrf, cache
 from app.models import Resource
 from dotenv import load_dotenv
+from config import Config  # ✅ Import your config class
 load_dotenv()
 
-# app.config.from_object(Config)
 
 
 def create_app():
@@ -27,7 +27,9 @@ def create_app():
     from app.routes.notes import notes_bp
     from app.routes.calendar import calendar_bp
     from app.routes.watchlist import watchlist_bp
+    from app.routes.risk_calculator import risk_bp
 
+    app.register_blueprint(risk_bp, url_prefix='/tools')
     app.register_blueprint(calendar_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(trades_bp)
@@ -51,3 +53,5 @@ def create_app():
         return dict(pinned_resources=[])
 
     return app
+#app = create_app()
+

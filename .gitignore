@@ -8,3 +8,7 @@ instance/
 *.log
 .venv
 ./unused-data
+Dockerfile
+.dockerignore
+generate_schema.py
+*.txt

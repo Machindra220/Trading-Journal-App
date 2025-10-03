@@ -15,8 +15,12 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 - 🕒 Notes page 
 - 🕒 Simple statistics for our trading performance tracking
 - 🖥️ Enhanced trade history view with action buttons (v1.1)
+- 🧮 Risk calculator according our investment value
 
 ## 🚀 Getting Started Steps
+
+Database Schema is placed in /app/db/schema.sql
+DB can be created using that schema.sql
 
 ```bash
 git clone https://github.com/Machindra220/trading-journal-app.git

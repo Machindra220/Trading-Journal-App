@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📊 Risk Calculator</h2>
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Investment Value:</label>
+    <input type="number" name="investment" step="0.01" required><br>
+
+    <label>Stock Current Price:</label>
+    <input type="number" name="current_price" step="0.01" required><br>
+
+    <label>Stop Loss Price:</label>
+    <input type="number" name="sl_price" step="0.01" required><br>
+
+    <button type="submit">Calculate</button>
+</form>
+
+{% if result %}
+    {% if result.error %}
+        <p style="color:red;">{{ result.error }}</p>
+    {% else %}
+        <h3>🧮 Risk Calculation Summary</h3>
+        <p>Investment: ₹{{ result.investment }}</p>
+        <p>Current Price: ₹{{ result.current_price }}</p>
+        <p>Stop Loss Price: ₹{{ result.sl_price }}</p>
+        <p>Risk per Share: ₹{{ result.risk_per_share }}</p>
+
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Risk %</th>
+                <th>Risk Amount</th>
+                <th>Quantity to Buy</th>
+            </tr>
+            {% for level in result.levels %}
+            <tr>
+                <td>{{ level.risk_pct }}%</td>
+                <td>₹{{ level.risk_amount | round(2) }}</td>
+                <td>{{ level.quantity }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endif %}
+{% endblock %}
