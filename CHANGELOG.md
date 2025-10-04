@@ -32,3 +32,8 @@
 - Risk calculator page according our investment value
 - Button size inconsistencies updated to all pages
 - Modified dashboard page table view columns
+
+## [v1.3.0] - 2025-10-04
+### Added
+- Register and Login Page modified with alternate options
+- Users table id query updated in schema
