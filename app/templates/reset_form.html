@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Set New Password{% endblock %}
+{% block content %}
+<h2>🔑 Set a New Password</h2>
+<p>Enter your new password below. Make sure it's at least 6 characters long.</p>
+
+<form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF Token -->
+  <label for="password">New Password</label>
+  <input type="password" name="password" id="password" required placeholder="••••••••">
+  <button type="submit">Update Password</button>
+</form>
+
+<p><a href="{{ url_for('auth.login') }}">← Back to Login</a></p>
+{% endblock %}

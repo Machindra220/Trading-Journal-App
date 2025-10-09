@@ -22,4 +22,9 @@
 
           <button type="submit">Register</button>
         </form>
+        <!-- ✅ Login Link -->
+        <div style="margin-top: 20px; text-align: center;">
+          <p>Already have an account?</p>
+          <a href="{{ url_for('auth.login') }}" class="button" style="padding: 6px 12px; background-color: #0eae79">Login</a>
+        </div>
 {% endblock %}

@@ -7,8 +7,9 @@ instance/
 .vscode/
 *.log
 .venv
-./unused-data
+.unused-data
 Dockerfile
+docker-compose.yml
 .dockerignore
 generate_schema.py
-*.txt
+history_commands.txt

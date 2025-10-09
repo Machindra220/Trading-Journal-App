@@ -22,29 +22,47 @@ def dashboard():
     total_invested_open = 0
 
     for trade in trades:
-        total_invested = sum(e.invested_amount for e in trade.entries)
+        if not trade.entries:
+            continue  # Skip trades with no entries
+
+        # Safely calculate total invested and quantity
+        total_invested = sum(float(e.invested_amount) for e in trade.entries)
         total_quantity = sum(e.quantity for e in trade.entries)
-        status = trade.status
-        avg_entry_price = round(total_invested / total_quantity, 2) if total_quantity > 0 else '—'
+        exited_quantity = sum(x.quantity for x in trade.exits)
+        remaining_quantity = total_quantity - exited_quantity
 
-        # Get first entry (if any)
-        first_entry = trade.entries[0] if trade.entries else None
-        quantity = first_entry.quantity if first_entry else '—'
-        entry_date = first_entry.date.strftime('%d %b %Y') if first_entry else '—'
-        note = first_entry.note if first_entry and first_entry.note else '—'
+        if total_quantity == 0:
+            continue  # Avoid division by zero
 
-        if status == "Open":
+        # Calculate metrics
+        avg_entry_price = round(total_invested / total_quantity, 2)
+        invested_remaining = round((remaining_quantity / total_quantity) * total_invested, 2)
+        realized_pnl = sum((exit.price - avg_entry_price) * exit.quantity for exit in trade.exits)
+
+        # Realized profit from exited quantity
+        realized_profit = sum((x.price - avg_entry_price) * x.quantity for x in trade.exits)
+        
+
+        # Get first entry details
+        first_entry = trade.entries[0]
+        entry_date = first_entry.date.strftime('%d %b %Y')
+        note = first_entry.note if first_entry.note else '—'
+
+        if trade.status == "Open":
             trade_data.append({
                 'id': trade.id,
                 'stock_name': trade.stock_name,
-                'status': status,
-                'total_invested': float(total_invested),
-                'quantity': quantity,
+                'status': trade.status,
+                'total_invested': invested_remaining,
+                'quantity': remaining_quantity,
+                'exited_quantity': exited_quantity,
+                'realized_pnl': round(realized_pnl, 2),  # ✅ Add this
+                'realized_profit': round(realized_profit, 2),
                 'entry_date': entry_date,
                 'note': note,
                 'avg_entry_price': avg_entry_price
             })
-            total_invested_open += total_invested
+            total_invested_open += invested_remaining
 
     return render_template('dashboard.html', trades=trade_data, total_invested=total_invested_open)
 
