@@ -37,3 +37,7 @@
 ### Added
 - Register and Login Page modified with alternate options
 - Users table id query updated in schema
+- Modified navigation bar collapsible for mobile for screens less than 768px
+- Added Stats charts for Profit/Loss by Date, week and Monthly bars
+- Corrected Remaining quantity after partial exits, Realized PnL after Partial Exit, corrected invested amount for remaining quantity. 
+- On Dashboard Page added remaining quantity column in the table, added visual indicator for partial exits

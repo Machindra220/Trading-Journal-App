@@ -24,6 +24,8 @@ def risk_calculator():
                 'risk_per_share': risk_per_share,
                 'levels': [
                     calc_qty(0.05),
+                    calc_qty(0.04),
+                    calc_qty(0.03),
                     calc_qty(0.02),
                     calc_qty(0.01)
                 ]

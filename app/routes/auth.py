@@ -1,9 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models import User
-from app.extensions import db, login_manager
+from app.extensions import db, login_manager, mail
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash
 import re
+from flask_mail import Message
+from flask import current_app
+
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -76,7 +79,6 @@ def login():
     return render_template('login.html')
 
 
-
 #logout Route
 @auth_bp.route('/logout')
 @login_required
@@ -84,3 +86,60 @@ def logout():
     logout_user()
     flash("You have been logged out.", "success")
     return redirect(url_for('auth.login'))
+
+#Reset Password Route
+@auth_bp.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    if request.method == 'POST':
+        email = request.form.get('email').strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = user.get_reset_token()
+            reset_url = url_for('auth.reset_token', token=token, _external=True)
+            # TODO: send email with reset_url
+            print("Reset link:", reset_url)  # Replace with email logic
+            flash("Password reset link sent to your email.", "success")
+        else:
+            flash("Email not found.", "error")
+        return redirect(url_for('auth.login'))
+    return render_template('reset_request.html')
+
+#Reset Password From
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    user = User.verify_reset_token(token)
+    if not user:
+        flash("Invalid or expired token.", "error")
+        return redirect(url_for('auth.reset_request'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "error")
+            return redirect(url_for('auth.reset_token', token=token))
+        user.password_hash = generate_password_hash(password)
+        db.session.commit()
+        flash("Your password has been updated.", "success")
+        return redirect(url_for('auth.login'))
+
+    return render_template('reset_form.html')
+
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    reset_url = url_for('auth.reset_token', token=token, _external=True)
+    msg = Message(
+        subject="Password Reset Request",
+        recipients=[user.email],
+        body=f"""Hi {user.username},
+
+To reset your password, click the link below:
+{reset_url}
+
+If you did not request this, please ignore this email.
+
+Thanks,
+Trading Journal Team
+"""
+    )
+    mail.send(msg)

@@ -41,6 +41,24 @@
       cursor: pointer;
       background-color: #0056b3;
     }
+    .button.contrast {
+  background-color: #0eae79;
+  color: white;
+}
+
+.button.secondary {
+  background-color: #0e81ae;
+  color: white;
+}
+
+/* .button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  margin: 0.5rem 0;
+} */
+
     .active {
       font-weight: bold;
       color: #007bff;
@@ -114,5 +132,76 @@ table.compact-table {
 table.compact-table tr {
   height: auto;
 }
+.navbar {
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e2f;
+  padding: 10px 20px;
+  color: white;
+}
 
- 
+.navbar-logo img {
+  height: 50px;
+}
+
+.navbar-menu {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.navbar-menu li {
+  margin: 8px 0;
+}
+
+.navbar-menu a {
+  text-decoration: none;
+  color: #ccc;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar-menu a.active,
+.navbar-menu a:hover {
+  color: #fff;
+}
+nav ul {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+nav ul.show {
+  display: flex;
+}
+
+.menu-toggle {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .menu-toggle {
+    display: none;
+  }
+
+  nav ul {
+    display: flex !important;
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+/* Make container full width */
+.container-fluid {
+  max-width: 100% !important;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* Optional: widen tables */
+table {
+  width: 100%;
+  table-layout: auto;
+}

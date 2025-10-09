@@ -20,7 +20,9 @@
         <th>Status</th>
         <th>Avg Price</th>
         <th>Qty</th>
+        <th>Exited Qty</th>
         <th>Invested</th>
+        <th>Realized PnL</th>
         <th>Entry Date</th>
         <th>Note</th>
         <th>Actions</th>
@@ -34,6 +36,8 @@
             <td>
               {% if trade.status == "Closed" %}
                 <span style="background-color:#dc3545; color:white; padding:2px 6px; border-radius:4px;">Closed</span>
+              {% elif trade.quantity < trade.exited_quantity and trade.quantity > 0 %}
+                <span style="background-color:#ffc107; color:black; padding:2px 6px; border-radius:4px;">Partial Exit</span>
               {% else %}
                 <span style="background-color:#28a745; color:white; padding:2px 6px; border-radius:4px;">Open</span>
               {% endif %}
@@ -41,7 +45,9 @@
 
             <td>{{ trade.avg_entry_price }}</td>
             <td>{{ trade.quantity }}</td>
+            <td>{{ trade.exited_quantity }}</td>
             <td>₹{{ trade.total_invested }}</td>
+            <td>₹{{ trade.realized_pnl }}</td>
             <td>{{ trade.entry_date }}</td>
             <td>{{ trade.note }}</td>
             

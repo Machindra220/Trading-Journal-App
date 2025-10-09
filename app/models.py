@@ -2,7 +2,8 @@ from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
-
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 
 class User(UserMixin, db.Model):
@@ -19,6 +20,21 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def get_reset_token(self, expires_sec=1800):
+        """Generate a secure token for password reset."""
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps(self.id)
+
+    @staticmethod
+    def verify_reset_token(token):
+        """Verify the token and return the user if valid."""
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=1800)
+        except Exception:
+            return None
+        return User.query.get(user_id)
 
 
 class Trade(db.Model):
@@ -44,6 +60,22 @@ class Trade(db.Model):
         total_exit = sum(x.price * x.quantity for x in self.exits if x.price and x.quantity)
 
         return round(total_exit - total_entry, 2)
+    @property
+    def realized_profit(self):
+        if not self.exits or not self.entries:
+            return 0
+
+        total_entry = sum(e.price * e.quantity for e in self.entries if e.price and e.quantity)
+        total_quantity = sum(e.quantity for e in self.entries if e.quantity)
+
+        if total_quantity == 0:
+            return 0
+
+        avg_entry_price = total_entry / total_quantity
+
+        profit = sum((x.price - avg_entry_price) * x.quantity for x in self.exits if x.price and x.quantity)
+        return round(profit, 2)
+
 
 class TradeEntry(db.Model):
     __tablename__ = 'trade_entries'

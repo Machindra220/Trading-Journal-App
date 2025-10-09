@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
+from collections import defaultdict
 from app.models import Trade, TradeEntry, TradeExit
 from app import cache
 
@@ -12,7 +13,7 @@ from app.routes.stats_helpers import (
 
 
 stats_bp = Blueprint('stats', __name__, template_folder='../templates')
-
+#stats Route
 @stats_bp.route('/')
 @login_required
 def stats_dashboard():
@@ -80,6 +81,44 @@ def stats_dashboard():
     equity_curve, max_drawdown = get_equity_curve(closed_trades)
     stock_stats = get_stock_stats(closed_trades)
 
+    # 📊 Prepare Profit/Loss Bar Chart Data
+    daily_pnl = defaultdict(float)
+
+    for t in closed_trades:
+        if t.exit_date and calculate_realized_pnl(t) != 0:
+            date_label = t.exit_date.strftime("%Y-%b-%d")  # e.g., "Apr-05"
+            daily_pnl[date_label] += calculate_realized_pnl(t)
+
+    # Convert to sorted list of bars
+    sorted_days = sorted(daily_pnl.items(), key=lambda x: datetime.strptime(x[0], "%Y-%b-%d"))
+    trade_bars = [{"date": label, "pnl": round(pnl, 2)} for label, pnl in sorted_days[-10:]]
+    
+    # 📊 Weekly Profit/Loss Bar Chart Data
+    weekly_pnl = defaultdict(float)
+
+    for t in closed_trades:
+        if t.exit_date and calculate_realized_pnl(t) != 0:
+            week_start = t.exit_date - timedelta(days=t.exit_date.weekday())  # Monday of the week
+            week_label = week_start.strftime("Week of %b %d")  # e.g., "Week of Oct 06"
+            weekly_pnl[week_label] += calculate_realized_pnl(t)
+
+    # Sort by week and keep last 10
+    sorted_weeks = sorted(weekly_pnl.items(), key=lambda x: datetime.strptime(x[0], "Week of %b %d"))
+    weekly_bars = [{"week": label, "pnl": round(pnl, 2)} for label, pnl in sorted_weeks[-10:]]
+
+    # 📊 Monthly Profit/Loss Bar Chart Data
+    monthly_pnl = defaultdict(float)
+
+    for t in closed_trades:
+        if t.exit_date and calculate_realized_pnl(t) != 0:
+            month_label = t.exit_date.strftime("%Y-%m")  # e.g., "2025-10"
+            monthly_pnl[month_label] += calculate_realized_pnl(t)
+
+    # Sort by month and keep last 12
+    sorted_months = sorted(monthly_pnl.items(), key=lambda x: datetime.strptime(x[0], "%Y-%m"))
+    monthly_bars = [{"month": datetime.strptime(label, "%Y-%m").strftime("%b %Y"), "pnl": round(pnl, 2)} for label, pnl in sorted_months[-12:]]
+
+
     context = {
         'realized_pnl': realized_pnl,
         'open_trades': len(open_trades),
@@ -98,7 +137,9 @@ def stats_dashboard():
         'max_drawdown': max_drawdown,
         'stock_stats': stock_stats,
         'equity_curve': equity_curve,
-        'equity_curve': equity_curve,
+        'trade_bars': trade_bars,  # 👈 Add this to template context for daily bars
+        'weekly_bars': weekly_bars, # context for weekly bars
+        'monthly_bars': monthly_bars,  # context for monthly bars
         'last_computed': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
 
