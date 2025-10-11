@@ -10,7 +10,7 @@
   {% endfor %}
 {% endwith %}
 
-<a href="{{ url_for('trades.add_trade') }}" role="button">➕ Add New Trade</a>
+<a href="{{ url_for('trades.add_trade') }}" role="button"  class="button primary" style="background-color: #0172ad;">➕ Add New Trade</a>
 
 {% if trades %}
   <table>
