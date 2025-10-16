@@ -15,27 +15,30 @@ def calendar_view():
 @login_required
 def calendar_events():
     trades = Trade.query.filter_by(user_id=current_user.id, status='closed').all()
-    daily = defaultdict(list)
-
-    for trade in trades:
-        key = str(trade.exit_date)
-        daily[key].append(trade)
+    
 
     events = []
-    for day, trades in daily.items():
-        total = sum(t.pnl for t in trades)
-        color = '#28a745' if total > 0 else '#dc3545' if total < 0 else '#ffc107'
-        tooltip = '\n'.join([f"{t.stock_name}: ₹{t.pnl} — {t.journal or ''}" for t in trades])
+    for trade in trades:
+        print(f"Trade: {trade.stock_name}, Exit Date: {trade.exit_date}, PnL: {trade.pnl}")
+        print("Entries:", trade.entries)
+        print("Exits:", trade.exits)
+        if not trade.exit_date:
+            continue  # skip if no exit date
+
+        color = '#28a745' if trade.pnl > 0 else '#dc3545' if trade.pnl < 0 else '#ffc107'
         events.append({
-            'title': f"₹{round(total, 2)}",
-            'start': day,
+            'title': f"{trade.stock_name} ₹{trade.pnl}",
+            'start': trade.exit_date.isoformat(),  # ✅ ISO format for FullCalendar
             'color': color,
-            'allDay': True,  # ✅ This ensures proper rendering in dayGridMonth
+            'allDay': True,
             'extendedProps': {
-                'notes': tooltip
+                'notes': trade.journal or ''
             }
         })
+    print("Emitting events:", events)
+  
     return jsonify(events)
+
 
 @calendar_bp.route('/calendar/summary')
 @login_required

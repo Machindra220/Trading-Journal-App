@@ -17,7 +17,7 @@
     <thead>
       <tr>
         <th>Stock</th>
-        <th>Status</th>
+        <!-- <th>Status</th> -->
         <th>Avg Price</th>
         <th>Qty</th>
         <th>Exited Qty</th>
@@ -31,9 +31,18 @@
       <tbody>
         {% for trade in trades %}
           <tr>
-            <td>{{ trade.stock_name }}</td>
-
             <td>
+              {% if trade.status == "Closed" %}
+                <span style="background-color:#dc3545; color:white; padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-right:6px;">C</span>
+              {% elif trade.quantity < trade.exited_quantity and trade.quantity > 0 %}
+                <span style="background-color:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-right:6px;">PE</span>
+              {% else %}
+                <span style="background-color:#28a745; color:white; padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-right:6px;">O</span>
+              {% endif %}
+              {{ trade.stock_name }}
+            </td>
+
+            <!-- <td>
               {% if trade.status == "Closed" %}
                 <span style="background-color:#dc3545; color:white; padding:2px 6px; border-radius:4px;">Closed</span>
               {% elif trade.quantity < trade.exited_quantity and trade.quantity > 0 %}
@@ -41,7 +50,7 @@
               {% else %}
                 <span style="background-color:#28a745; color:white; padding:2px 6px; border-radius:4px;">Open</span>
               {% endif %}
-            </td>
+            </td> -->
 
             <td>{{ trade.avg_entry_price }}</td>
             <td>{{ trade.quantity }}</td>
