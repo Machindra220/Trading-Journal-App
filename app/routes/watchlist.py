@@ -9,7 +9,7 @@ watchlist_bp = Blueprint('watchlist', __name__, url_prefix='/watchlist')
 
 
 #Add entry to watchlist route
-@watchlist_bp.route('/watchlist', methods=['GET', 'POST'])
+@watchlist_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def add():
     if request.method == 'POST':
