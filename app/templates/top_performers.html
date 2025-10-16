@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-4">
+  <h1 class="text-3xl font-bold mb-6 text-blue-800">📈 Top Performing Stocks</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-4 space-y-2">
+        {% for category, message in messages %}
+            <div class="px-4 py-2 rounded text-sm font-medium
+                        {% if category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+     <!-- CSV Upload Form -->
+  <form action="{{ url_for('performers.upload_csv') }}" method="POST" enctype="multipart/form-data" class="mb-8 bg-white p-4 rounded shadow">
+     <!-- 🔐 CSRF Protection -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="block mb-2 font-medium text-gray-700">Upload CSV File:</label>
+    <input type="file" name="csv_file" accept=".csv" required class="block w-full border border-gray-300 rounded px-3 py-2 mb-4">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload</button>
+  </form>
+
+  <!-- Loading Message -->
+<div id="loading" class="text-center text-blue-600 font-semibold text-lg my-8">
+  🔄 Processing stock returns... please wait.
+</div>
+
+<div id="tables" class="hidden">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Nifty 200 -->
+    <div>
+      <h2 class="text-xl font-semibold mb-4 text-blue-700">Nifty 200 (Top 20)</h2>
+      <div class="overflow-x-auto rounded shadow">
+        <table class="min-w-full bg-white border border-gray-300">
+          <thead class="bg-blue-100 text-blue-900">
+            <tr><th class="px-4 py-2">#</th><th>Stock</th><th>1-Year Return %</th></tr>
+          </thead>
+          <tbody>
+            {% for stock in nifty_200 %}
+              <tr class="{% if stock.symbol in overlaps %}bg-green-100 font-semibold{% else %}hover:bg-gray-50{% endif %}">
+                <td class="px-4 py-2">{{ stock.rank }}</td>
+                <td class="px-4 py-2">{{ stock.symbol }}</td>
+                <td class="px-4 py-2">{{ stock.return_pct }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BSE 200 -->
+    <div>
+      <h2 class="text-xl font-semibold mb-4 text-blue-700">BSE 200 (Top 20)</h2>
+      <div class="overflow-x-auto rounded shadow">
+        <table class="min-w-full bg-white border border-gray-300">
+          <thead class="bg-blue-100 text-blue-900">
+            <tr><th class="px-4 py-2">#</th><th>Stock</th><th>1-Year Return %</th></tr>
+          </thead>
+          <tbody>
+            {% for stock in bse_200 %}
+              <tr class="{% if stock.symbol in overlaps %}bg-green-100 font-semibold{% else %}hover:bg-gray-50{% endif %}">
+                <td class="px-4 py-2">{{ stock.rank }}</td>
+                <td class="px-4 py-2">{{ stock.symbol }}</td>
+                <td class="px-4 py-2">{{ stock.return_pct }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nifty 500 -->
+  <div class="mt-12">
+    <h2 class="text-xl font-semibold mb-4 text-blue-700">Nifty 500 (Top 20)</h2>
+    <div class="overflow-x-auto rounded shadow">
+      <table class="min-w-full bg-white border border-gray-300">
+        <thead class="bg-blue-100 text-blue-900">
+          <tr><th class="px-4 py-2">#</th><th>Stock</th><th>1-Year Return %</th></tr>
+        </thead>
+        <tbody>
+          {% for stock in nifty_500 %}
+            <tr class="{% if stock.symbol in overlaps %}bg-green-100 font-semibold{% else %}hover:bg-gray-50{% endif %}">
+              <td class="px-4 py-2">{{ stock.rank }}</td>
+              <td class="px-4 py-2">{{ stock.symbol }}</td>
+              <td class="px-4 py-2">{{ stock.return_pct }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  // Show loading until page fully renders
+  window.addEventListener("load", () => {
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("tables").classList.remove("hidden");
+  });
+</script>
+{% endblock %}

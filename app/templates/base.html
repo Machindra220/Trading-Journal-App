@@ -27,17 +27,34 @@
     <!-- Right: Menu + Mobile -->
     <div class="flex items-center gap-4">
       <!-- Desktop Menu -->
-      <ul class="hidden lg:flex gap-3 items-center text-sm font-medium whitespace-nowrap">
+      <!-- <ul class="hidden lg:flex gap-3 items-center text-sm font-medium whitespace-nowrap"> -->
+      <ul class="hidden lg:flex gap-3 items-center text-sm font-medium whitespace-nowrap relative">
+
         {% set active = 'bg-white text-blue-800 font-semibold' %}
         {% set inactive = 'border border-white text-white hover:bg-blue-700' %}
         <li><a href="{{ url_for('trades.dashboard') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.dashboard' else inactive }}">🏠 Dashboard</a></li>
         <li><a href="{{ url_for('trades.add_trade') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.add_trade' else inactive }}">➕ Add Trade</a></li>
         <li><a href="{{ url_for('trades.trade_history') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.trade_history' else inactive }}">📜 History</a></li>
         <li><a href="{{ url_for('resources.show_resources') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'resources.show_resources' else inactive }}">🧰 Resources</a></li>
+        <!-- Resources Dropdown (Desktop) -->
+        <!-- Resources Dropdown (Desktop) -->
+        <!-- <li class="relative group">
+          <div class="px-3 py-1 rounded cursor-pointer {{ active if request.endpoint == 'resources.show_resources' else inactive }}">
+            🧰 Resources ▾
+          </div>
+          <ul class="absolute left-0 top-full hidden group-hover:flex flex-col bg-white text-blue-800 border border-gray-200 rounded shadow-md mt-1 min-w-[160px] z-50">
+            <li><a href="{{ url_for('resources.show_resources') }}" class="block px-4 py-2 hover:bg-blue-100">All Resources</a></li>
+            <li><a href="{{ url_for('risk.risk_calculator') }}" class="block px-4 py-2 hover:bg-blue-100">🧮 Calculator</a></li>
+            <li><a href="{{ url_for('notes.notes_page') }}" class="block px-4 py-2 hover:bg-blue-100">📝 Notes</a></li>
+            <li><a href="{{ url_for('calendar.calendar_view') }}" class="block px-4 py-2 hover:bg-blue-100">📅 Calendar</a></li>
+          </ul>
+        </li> -->
+
         <li><a href="{{ url_for('risk.risk_calculator') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'risk.risk_calculator' else inactive }}">🧮 Calculator</a></li>
         <li><a href="{{ url_for('notes.notes_page') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'notes.notes_page' else inactive }}">📝 Notes</a></li>
         <li><a href="{{ url_for('stats.stats_dashboard') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'stats.stats_dashboard' else inactive }}">📊 Stats</a></li>
         <li><a href="{{ url_for('calendar.calendar_view') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'calendar.calendar_view' else inactive }}">📅 Calendar</a></li>
+        <li><a href="{{ url_for('performers.top_performers') }}" class="px-3 py-1 rounded">📈 Top Performers</a></li>
         <li><a href="{{ url_for('watchlist.add') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'watchlist.add' else inactive }}">📈 Watchlist</a></li>
         <li><a href="{{ url_for('auth.logout') }}" class="px-3 py-1 border border-red-300 text-red-300 hover:bg-red-100 rounded">🚪 Logout</a></li>
       </ul>

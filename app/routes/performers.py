@@ -1,0 +1,73 @@
+from flask import request, redirect, url_for, Blueprint, render_template, flash
+import pandas as pd
+import yfinance as yf
+import os
+from functools import lru_cache
+
+performers_bp = Blueprint("performers", __name__)
+
+@lru_cache(maxsize=128)
+def get_1yr_return(symbol, suffix=".NS"):
+    try:
+        ticker = yf.Ticker(symbol + suffix)
+        hist = ticker.history(period="1y", interval="1d")
+        if hist.empty or len(hist) < 2:
+            return None
+        start_price = hist["Close"].iloc[0]
+        end_price = hist["Close"].iloc[-1]
+        return round(((end_price - start_price) / start_price) * 100, 2)
+    except Exception as e:
+        print(f"Error fetching {symbol}: {e}")
+        return None
+
+def get_top_performers(csv_file, top_n=12, suffix=".NS"):
+    if not os.path.exists(csv_file):
+        flash(f"CSV file not found: {csv_file}", "error")
+        return []
+
+    try:
+        df = pd.read_csv(csv_file)
+        df.columns = df.columns.str.strip().str.lower()
+        results = []
+
+        for symbol in df["symbol"]:
+            ret = get_1yr_return(symbol, suffix)
+            if ret is not None:
+                results.append({"symbol": symbol, "return_pct": ret})
+
+        top_df = pd.DataFrame(results).sort_values(by="return_pct", ascending=False).head(top_n)
+        top_df.reset_index(drop=True, inplace=True)
+        top_df["rank"] = top_df.index + 1
+        return top_df.to_dict(orient="records")
+    except Exception as e:
+        flash(f"Error processing {csv_file}: {e}", "error")
+        return []
+
+@performers_bp.route("/top-performers")
+def top_performers():
+    nifty_200 = get_top_performers("data/nifty_200.csv", top_n=20, suffix=".NS")
+    nifty_500 = get_top_performers("data/nifty_500.csv", top_n=20, suffix=".NS")
+    bse_200 = get_top_performers("data/bse_200.csv", top_n=20, suffix=".BO")
+
+    n200_set = set([s["symbol"] for s in nifty_200])
+    n500_set = set([s["symbol"] for s in nifty_500])
+    bse_set = set([s["symbol"] for s in bse_200])
+    overlaps = n200_set & n500_set & bse_set
+
+    return render_template("top_performers.html",
+                           nifty_200=nifty_200,
+                           nifty_500=nifty_500,
+                           bse_200=bse_200,
+                           overlaps=overlaps)
+
+@performers_bp.route("/upload-csv", methods=["POST"])
+def upload_csv():
+    file = request.files.get("csv_file")
+    if not file or not file.filename.endswith(".csv"):
+        flash("Please upload a valid CSV file.", "error")
+        return redirect(url_for("performers.top_performers"))
+
+    save_path = os.path.join("data", file.filename)
+    file.save(save_path)
+    flash(f"Uploaded {file.filename} successfully.", "info")
+    return redirect(url_for("performers.top_performers"))
