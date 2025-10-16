@@ -47,3 +47,18 @@
 - Menu view modified, Toggle menu bug fix
 - Pinned Tools Made Compact
 - Dashboard page status merged to stock name
+
+## [v1.4.0] - 2025-10-16
+### UI Refinements
+- Navigation & Layout Refinement
+- Tailwind UI Enhancements
+- Navigation bar redesigned for clarity and responsiveness
+- Logo anchored to left for consistent branding
+- Menu items spaced with gap-3 and whitespace-nowrap to prevent wrapping
+- Improved hover and active states using Tailwind variants
+- Mobile menu toggle retained with clean visibility control
+- Pinned resources section styled with consistent spacing and hover feedback
+- Added Footer layout
+- Responsive flex layout with sm:flex-row
+- Hover states improved for links
+- Global layout uses flex flex-col min-h-screen to ensure sticky footer behavior

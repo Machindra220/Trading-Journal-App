@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Past/Completed Trades{% endblock %}
 {% block content %}
-<h2>📊 Past/Completed Trades</h2>
 
-<!-- Filter Row -->
-<form method="GET" action="{{ url_for('trades.trade_history') }}" style="margin-bottom:20px;">
-  <div style="display:flex; flex-wrap:wrap; gap:15px; align-items:flex-end;">
+<h2 class="text-2xl font-semibold text-gray-800 mb-6">📊 Past/Completed Trades</h2>
 
+<!-- 🔍 Filter & Controls -->
+<form method="GET" action="{{ url_for('trades.trade_history') }}" class="mb-6">
+  <div class="flex flex-wrap gap-6 items-end">
+
+    <!-- 📈 Stock Filter -->
     <div>
-      <label for="stock_filter" title="Filter trades by stock symbol">📈 Stock</label>
-      <select name="stock" id="stock_filter">
+      <label for="stock_filter" class="block text-sm font-medium text-gray-700 mb-1">📈 Stock</label>
+      <select name="stock" id="stock_filter"
+              class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <option value="">All</option>
         {% for symbol in stock_list %}
           <option value="{{ symbol }}" {% if symbol == selected_stock %}selected{% endif %}>{{ symbol }}</option>
@@ -17,9 +20,11 @@
       </select>
     </div>
 
+    <!-- 📅 Date Range -->
     <div>
-      <label for="date_range" title="Show trades closed in a specific time window">📅 Date Range</label>
-      <select name="date_range" id="date_range">
+      <label for="date_range" class="block text-sm font-medium text-gray-700 mb-1">📅 Date Range</label>
+      <select name="date_range" id="date_range"
+              class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <option value="">All</option>
         <option value="last_month" {% if selected_range == 'last_month' %}selected{% endif %}>Last Month</option>
         <option value="last_3_months" {% if selected_range == 'last_3_months' %}selected{% endif %}>Last 3 Months</option>
@@ -27,101 +32,108 @@
       </select>
     </div>
 
+    <!-- 🔃 Sort -->
     <div>
-      <label for="sort" title="Sort trades by realized profit/loss">🔃 Sort</label>
-      <select name="sort" id="sort">
-        <option value="desc" {% if sort == 'desc' %}selected{% endif %}>High Profit → Low</option>
-        <option value="asc" {% if sort == 'asc' %}selected{% endif %}>Low Profit → High</option>
+      <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">🔃 Sort by P&L</label>
+      <select name="sort" id="sort"
+              class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="desc" {% if sort == 'desc' %}selected{% endif %}>High → Low</option>
+        <option value="asc" {% if sort == 'asc' %}selected{% endif %}>Low → High</option>
       </select>
     </div>
 
-    <div style="display: inline-flex; gap: 10px; margin-top: 1.5em; align-items: center;">
-      <button type="submit" title="Apply selected filters" style="padding: 6px 16px; font-size: 0.9rem; background-color: #0172ad; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Apply</button>
-      <a href="{{ url_for('trades.export_history', stock=selected_stock, date_range=selected_range, sort=sort) }}"
-         class="button" title="Download filtered trades as Excel"
-         style="padding: 6px 16px; font-size: 0.9rem; background-color: #17a2b8; color: white; border-radius: 4px; text-decoration: none; display: inline-block;">📤 Export</a>
-           <button onclick="window.print()" title="Print or Save as PDF" class="button" style="padding: 6px 16px; font-size: 0.9rem; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            🖨️ Print PDF
-      </button> <!-- style="display: inline-flex; gap: 6px; align-items: center;" text-decoration:none; background:#6c757d; color:white; -->
+    <!-- 📏 Page Size -->
+    <div>
+      <label for="page_size" class="block text-sm font-medium text-gray-700 mb-1">📏 Rows to Show</label>
+      <select name="page_size" id="page_size"
+              class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="20" {% if page_size == 20 %}selected{% endif %}>20</option>
+        <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+        <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+      </select>
     </div>
 
+    <!-- 🔍 Apply + Export + Print -->
+    <div class="flex gap-3 mt-6">
+      <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+        🔍 Apply
+      </button>
+      <a href="{{ url_for('trades.export_history', stock=selected_stock, date_range=selected_range, sort=sort) }}"
+         class="px-4 py-2 bg-green-600 text-white rounded hover:bg-cyan-700 transition">
+        📤 Export
+      </a>
+      <button onclick="window.print()"
+              class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+        🖨️ Print PDF
+      </button>
+    </div>
   </div>
 </form>
 
-
-<!-- Trade Table -->
+<!-- 📋 Trade Table -->
 {% if trades %}
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
+  <div class="overflow-x-auto rounded shadow border border-gray-200">
+    <table class="min-w-full text-sm text-left text-gray-700">
+      <thead class="bg-gray-100 text-gray-800">
         <tr>
-          <th>Stock Name</th>
-          <th>Entry</th>
-          <th>Exit</th>
-          <th>Entry (Avg)</th>
-          <th>Exit (Avg)</th>
-          <th>Quantity</th>
-          <th>Duration</th>
-          <th>Realized P&L</th>
-          <th>Notes</th>
-          <th>Actions</th>
+          <th class="px-4 py-2">Stock Name</th>
+          <th class="px-4 py-2">Entry</th>
+          <th class="px-4 py-2">Exit</th>
+          <th class="px-4 py-2">Entry (Avg)</th>
+          <th class="px-4 py-2">Exit (Avg)</th>
+          <th class="px-4 py-2">Quantity</th>
+          <th class="px-4 py-2">Duration</th>
+          <th class="px-4 py-2">Realized P&L</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Actions</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-gray-200">
         {% for t in trades %}
-          <tr>
-            <td>{{ t.stock_name }}</td>
-            <td>{{ t.entry_date.strftime('%d %b %Y') if t.entry_date else '—' }}</td>
-            <td>{{ t.exit_date.strftime('%d %b %Y') if t.exit_date else '—' }}</td>
-            <td>₹{{ "%.2f"|format(t.avg_entry_price) }}</td>
-            <td>₹{{ "%.2f"|format(t.avg_exit_price) }}</td>
-            <td>{{ t.total_quantity }}</td>
-            <td>{{ t.total_days }} days</td>
-            <td>
-              {% if t.realized_pnl >= 0 %}
-                <span style="color:green;">₹{{ "%.2f"|format(t.realized_pnl) }}</span>
-              {% else %}
-                <span style="color:red;">₹{{ "%.2f"|format(t.realized_pnl) }}</span>
-              {% endif %}
-            </td>
-            <td>{{ t.notes or '—' }}</td>
-            <td style="white-space: nowrap;">
-              <div style="display: inline-flex; gap: 6px; align-items: center;">
-                <!-- View -->
-                <form method="GET" action="{{ url_for('trades.view_trade', trade_id=t['id']) }}" style="margin:0;">
-                  <button type="submit"
-                          class="btn btn-sm btn-outline-info"
-                          title="View Trade"
-                          style="padding: 4px 8px;">
-                    🔍
-                  </button>
-                </form>
-
-                <!-- Edit disabled on history page -->
-                <!-- <a href="{{ url_for('trades.edit_trade', trade_id=t['id']) }}"
-                  class="btn btn-sm btn-outline-primary" title="Edit">
-                  ✏️
-                </a> -->
-
-                <!-- Delete -->
-                <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=t['id']) }}" style="margin:0;">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit"
-                          class="btn btn-sm btn-outline-danger"
-                          onclick="return confirm('Delete this trade?')"
-                          title="Delete"
-                          style="background-color:#bd5656; padding: 4px 8px;"> <!-- Button Size Small = font-size: 0.875rem; line-height: 1.2;-->
-                    🗑️
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-2">{{ t.stock_name }}</td>
+          <td class="px-4 py-2">{{ t.entry_date.strftime('%d %b %Y') if t.entry_date else '—' }}</td>
+          <td class="px-4 py-2">{{ t.exit_date.strftime('%d %b %Y') if t.exit_date else '—' }}</td>
+          <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_entry_price) }}</td>
+          <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_exit_price) }}</td>
+          <td class="px-4 py-2">{{ t.total_quantity }}</td>
+          <td class="px-4 py-2">{{ t.total_days }} days</td>
+          <td class="px-4 py-2" style="background-color: {{ 'rgba(40,167,69,0.1)' if t.realized_pnl >= 0 else 'rgba(220,53,69,0.1)' }};">
+            {% if t.realized_pnl >= 0 %}
+              <span style="color:green;">▲ ₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+            {% else %}
+              <span style="color:red;">▼ ₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2">{{ t.notes or '—' }}</td>
+          <td class="px-4 py-2 whitespace-nowrap">
+            <div class="flex gap-2">
+              <form method="GET" action="{{ url_for('trades.view_trade', trade_id=t['id']) }}">
+                <button type="submit"
+                        class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                        title="View Trade">
+                  🔍
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=t['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        onclick="return confirm('Delete this trade?')"
+                        class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                        title="Delete">
+                  🗑️
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 {% else %}
-  <div style="color:gray; font-style:italic;">No completed trades found for selected filters.</div>
+  <div class="text-gray-500 italic mt-6">No completed trades found for selected filters.</div>
 {% endif %}
+
 {% endblock %}
