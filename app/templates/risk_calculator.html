@@ -1,44 +1,92 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>📊 Risk Calculator</h2>
-<form method="POST">
+
+<!-- 🧭 Page Heading -->
+<h2 class="text-2xl font-semibold text-gray-800 mb-6">📊 Risk Calculator</h2>
+
+<!-- 🧮 Two-Column Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <!-- 📝 Risk Calculation Form -->
+  <form method="POST" class="bg-white p-6 rounded shadow space-y-4">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Investment Value:</label>
-    <input type="number" name="investment" step="0.01" required><br>
 
-    <label>Stock Current Price:</label>
-    <input type="number" name="current_price" step="0.01" required><br>
+    <!-- 💰 Investment Value -->
+    <div>
+      <label for="investment" class="block text-sm font-medium text-gray-700 mb-1">Investment Value</label>
+      <input type="number"
+             name="investment"
+             step="0.01"
+             required
+             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
 
-    <label>Stop Loss Price:</label>
-    <input type="number" name="sl_price" step="0.01" required><br>
+    <!-- 📈 Current Price -->
+    <div>
+      <label for="current_price" class="block text-sm font-medium text-gray-700 mb-1">Stock Current Price</label>
+      <input type="number"
+             name="current_price"
+             step="0.01"
+             required
+             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
 
-    <button type="submit">Calculate</button>
-</form>
+    <!-- 🛡️ Stop Loss Price -->
+    <div>
+      <label for="sl_price" class="block text-sm font-medium text-gray-700 mb-1">Stop Loss Price</label>
+      <input type="number"
+             name="sl_price"
+             step="0.01"
+             required
+             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
 
-{% if result %}
+    <!-- ✅ Submit Button -->
+    <button type="submit"
+            class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+      Calculate
+    </button>
+  </form>
+
+  <!-- 📊 Risk Calculation Summary -->
+  {% if result %}
+  <div class="bg-white p-6 rounded shadow">
     {% if result.error %}
-        <p style="color:red;">{{ result.error }}</p>
+      <p class="text-red-600 font-medium">{{ result.error }}</p>
     {% else %}
-        <h3>🧮 Risk Calculation Summary</h3>
-        <p>Investment: ₹{{ result.investment }}</p>
-        <p>Current Price: ₹{{ result.current_price }}</p>
-        <p>Stop Loss Price: ₹{{ result.sl_price }}</p>
-        <p>Risk per Share: ₹{{ result.risk_per_share }}</p>
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🧮 Risk Calculation Summary</h3>
+      <ul class="mb-4 space-y-1 text-gray-700">
+        <li>Investment: ₹{{ result.investment }}</li>
+        <li>Current Price: ₹{{ result.current_price }}</li>
+        <li>Stop Loss Price: ₹{{ result.sl_price }}</li>
+        <li>Risk per Share: ₹{{ result.risk_per_share }}</li>
+      </ul>
 
-        <table border="1" cellpadding="8">
+      <!-- 📐 Risk Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-300 rounded shadow-sm text-sm">
+          <thead class="bg-gray-100 text-gray-700">
             <tr>
-                <th>Risk %</th>
-                <th>Risk Amount</th>
-                <th>Quantity to Buy</th>
+              <th class="px-4 py-2 text-left">Risk %</th>
+              <th class="px-4 py-2 text-left">Risk Amount</th>
+              <th class="px-4 py-2 text-left">Quantity to Buy</th>
             </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
             {% for level in result.levels %}
-            <tr>
-                <td>{{ level.risk_pct }}%</td>
-                <td>₹{{ level.risk_amount | round(2) }}</td>
-                <td>{{ level.quantity }}</td>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2">{{ level.risk_pct }}%</td>
+              <td class="px-4 py-2">₹{{ level.risk_amount | round(2) }}</td>
+              <td class="px-4 py-2">{{ level.quantity }}</td>
             </tr>
             {% endfor %}
+          </tbody>
         </table>
+      </div>
     {% endif %}
-{% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
 {% endblock %}

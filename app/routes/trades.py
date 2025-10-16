@@ -130,7 +130,8 @@ def view_trade(trade_id):
         exits=exits,
         status=status,
         pnl=round(pnl, 2) if pnl is not None else None,
-        duration_days=duration_days
+        duration_days=duration_days,
+        current_date = date.today().isoformat()  # 'YYYY-MM-DD' format
     )
 
 

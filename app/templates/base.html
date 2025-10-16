@@ -1,48 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="transition-colors duration-300">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portfolio App</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 </head>
-<body>
+
+<body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen">
 
 {% if current_user.is_authenticated %}
-<nav class="container-fluid" style="padding: 4px 12px; background-color: #201f1f; border-bottom: 1px solid #412e9c;">
-  <div class="d-flex justify-content-between align-items-center" class="navbar-logo">
-    <a href="{{ url_for('trades.dashboard') }}">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:36px;">
-    </a>
-    <button type="button" class="menu-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('show')">☰</button>
+<!-- 🌐 Navigation Bar -->
+<nav class="bg-blue-800 text-white border-b border-blue-900 shadow">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('trades.dashboard') }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="h-10">
+      </a>
+    </div>
+
+    <!-- Right: Menu + Mobile -->
+    <div class="flex items-center gap-4">
+      <!-- Desktop Menu -->
+      <ul class="hidden lg:flex gap-3 items-center text-sm font-medium whitespace-nowrap">
+        {% set active = 'bg-white text-blue-800 font-semibold' %}
+        {% set inactive = 'border border-white text-white hover:bg-blue-700' %}
+        <li><a href="{{ url_for('trades.dashboard') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.dashboard' else inactive }}">🏠 Dashboard</a></li>
+        <li><a href="{{ url_for('trades.add_trade') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.add_trade' else inactive }}">➕ Add Trade</a></li>
+        <li><a href="{{ url_for('trades.trade_history') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.trade_history' else inactive }}">📜 History</a></li>
+        <li><a href="{{ url_for('resources.show_resources') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'resources.show_resources' else inactive }}">🧰 Resources</a></li>
+        <li><a href="{{ url_for('risk.risk_calculator') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'risk.risk_calculator' else inactive }}">🧮 Calculator</a></li>
+        <li><a href="{{ url_for('notes.notes_page') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'notes.notes_page' else inactive }}">📝 Notes</a></li>
+        <li><a href="{{ url_for('stats.stats_dashboard') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'stats.stats_dashboard' else inactive }}">📊 Stats</a></li>
+        <li><a href="{{ url_for('calendar.calendar_view') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'calendar.calendar_view' else inactive }}">📅 Calendar</a></li>
+        <li><a href="{{ url_for('watchlist.add') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'watchlist.add' else inactive }}">📈 Watchlist</a></li>
+        <li><a href="{{ url_for('auth.logout') }}" class="px-3 py-1 border border-red-300 text-red-300 hover:bg-red-100 rounded">🚪 Logout</a></li>
+      </ul>
+
+      <!-- Mobile Toggle -->
+      <button type="button" class="text-2xl lg:hidden focus:outline-none"
+              onclick="document.getElementById('nav-menu').classList.toggle('hidden')">
+        ☰
+      </button>
+    </div>
   </div>
 
-  <ul class="nav-menu d-flex flex-wrap align-items-center list-unstyled mt-2 mb-0" style="gap: 8px;">
-    <li><a href="{{ url_for('trades.dashboard') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.dashboard' %}active{% endif %}">🏠 Dashboard</a></li>
-    <li><a href="{{ url_for('trades.add_trade') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.add_trade' %}active{% endif %}">➕ Add Trade</a></li>
-    <li><a href="{{ url_for('trades.trade_history') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.trade_history' %}active{% endif %}">📜 History</a></li>
-    <li><a href="{{ url_for('resources.show_resources') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'resources.show_resources' %}active{% endif %}">🧰 Resources</a></li>
-    <li><a href="{{ url_for('risk.risk_calculator') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'risk.risk_calculator' %}active{% endif %}">🧮 Calculator</a></li>
-    <li><a href="{{ url_for('notes.notes_page') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'notes.notes_page' %}active{% endif %}">📝 Notes</a></li>
-    <li><a href="{{ url_for('stats.stats_dashboard') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'stats.stats_dashboard' %}active{% endif %}">📊 Stats</a></li>
-    <li><a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'calendar.calendar_view' %}active{% endif %}">📅 Calendar</a></li>
-    <li><a href="{{ url_for('watchlist.add') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'watchlist.add' %}active{% endif %}">📈 Watchlist</a></li>
-    <li><a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">🚪 Logout</a></li>
+  <!-- Mobile Menu -->
+  <ul id="nav-menu" class="lg:hidden px-6 pb-4 space-y-2 text-sm font-medium hidden">
+    <li><a href="{{ url_for('trades.dashboard') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'trades.dashboard' else inactive }}">🏠 Dashboard</a></li>
+    <li><a href="{{ url_for('trades.add_trade') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'trades.add_trade' else inactive }}">➕ Add Trade</a></li>
+    <li><a href="{{ url_for('trades.trade_history') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'trades.trade_history' else inactive }}">📜 History</a></li>
+    <li><a href="{{ url_for('resources.show_resources') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'resources.show_resources' else inactive }}">🧰 Resources</a></li>
+    <li><a href="{{ url_for('risk.risk_calculator') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'risk.risk_calculator' else inactive }}">🧮 Calculator</a></li>
+    <li><a href="{{ url_for('notes.notes_page') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'notes.notes_page' else inactive }}">📝 Notes</a></li>
+    <li><a href="{{ url_for('stats.stats_dashboard') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'stats.stats_dashboard' else inactive }}">📊 Stats</a></li>
+    <li><a href="{{ url_for('calendar.calendar_view') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'calendar.calendar_view' else inactive }}">📅 Calendar</a></li>
+    <li><a href="{{ url_for('watchlist.add') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'watchlist.add' else inactive }}">📈 Watchlist</a></li>
+    <li><a href="{{ url_for('auth.logout') }}" class="block px-3 py-2 border border-red-300 text-red-300 hover:bg-red-100 rounded">🚪 Logout</a></li>
   </ul>
 </nav>
 {% endif %}
 
-<main class="container-fluid">
+<!-- 📌 Pinned Resources -->
+<main class="flex-grow p-4">
   {% if current_user.is_authenticated and pinned_resources %}
-  <div class="d-flex align-items-center justify-content-start mb-2" style="gap: 8px; flex-wrap: nowrap; overflow-x: auto;">
-    <strong style="white-space: nowrap;">📌 Pinned:</strong>
+  <div class="flex items-center gap-2 mb-4 overflow-x-auto whitespace-nowrap">
+    <strong>📌 Pinned:</strong>
     {% for r in pinned_resources %}
     <a href="{{ url_for('resources.access_resource', id=r.id) }}" target="_blank" rel="noopener noreferrer"
-       class="btn btn-sm btn-outline-primary px-2 py-0" style="white-space: nowrap;">
+       class="px-2 py-1 text-sm border border-blue-500 rounded text-blue-600 hover:bg-blue-100">
       🔗 {{ r.title }}
     </a>
     {% endfor %}
@@ -51,6 +82,20 @@
 
   {% block content %}{% endblock %}
 </main>
+
+<!-- 🌐 Global Footer -->
+<footer class="border-t border-gray-300 bg-white text-sm text-gray-600">
+  <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center">
+    <div class="mb-2 sm:mb-0">
+      © 2025 Portfolio App — Built with ❤️ by Machindra
+    </div>
+    <div class="flex gap-4">
+      <a href="https://github.com/your-repo" target="_blank" class="hover:text-indigo-600">GitHub</a>
+      <a href="{{ url_for('resources.show_resources') }}" class="hover:text-indigo-600">Resources</a>
+      <a href="{{ url_for('auth.logout') }}" class="hover:text-red-600">Logout</a>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
