@@ -1,138 +1,86 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
+<div class="max-w-5xl mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <button id="prevMonth" class="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">← Prev</button>
+    <h2 id="monthLabel" class="text-xl font-semibold text-gray-800"></h2>
+    <button id="nextMonth" class="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next →</button>
+  </div>
 
-<!-- 📅 FullCalendar Styles & Scripts -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <div class="grid grid-cols-7 gap-px bg-gray-300 text-center text-sm font-medium text-gray-700">
+    <div class="bg-white py-2">Sun</div>
+    <div class="bg-white py-2">Mon</div>
+    <div class="bg-white py-2">Tue</div>
+    <div class="bg-white py-2">Wed</div>
+    <div class="bg-white py-2">Thu</div>
+    <div class="bg-white py-2">Fri</div>
+    <div class="bg-white py-2">Sat</div>
+  </div>
 
-<!-- 🔄 View Toggle Buttons -->
-<div class="flex gap-4 mb-4">
-  <button id="calendarBtn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-    📅 Calendar View
-  </button>
-  <button id="listBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
-    📋 List View
-  </button>
+  <div id="calendarGrid" class="grid grid-cols-7 gap-px bg-gray-300 mt-px"></div>
 </div>
 
-<!-- 📊 Summary Badges -->
-<div id="summary" class="flex flex-wrap gap-3 mb-6 text-sm">
-  <!-- Filled dynamically via JS -->
-</div>
-
-<!-- 📅 Calendar Container -->
-<div id="calendar-container">
-  <div id="calendar" class="bg-white p-4 rounded shadow"></div>
-</div>
-
-<!-- 📋 List View Container -->
-<div id="list-container" style="display:none;">
-  <table class="min-w-full text-sm text-left text-gray-700 border border-gray-200 rounded overflow-hidden shadow">
-    <thead class="bg-gray-100 text-gray-800">
-      <tr>
-        <th class="px-4 py-2">Date</th>
-        <th class="px-4 py-2">Stock</th>
-        <th class="px-4 py-2">P&L</th>
-        <th class="px-4 py-2">Notes</th>
-      </tr>
-    </thead>
-    <tbody id="trade-list" class="divide-y divide-gray-200">
-      <!-- Filled dynamically via JS -->
-    </tbody>
-  </table>
-</div>
-
-<!-- 📜 FullCalendar Initialization -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const calendarEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    height: 'auto',
-    events: '/calendar/events',
+const calendarGrid = document.getElementById("calendarGrid");
+const monthLabel = document.getElementById("monthLabel");
+let currentMonth = {{ month }};
+let currentYear = {{ year }};
 
-    // Customize event display
-    eventContent: function(arg) {
-      return {
-        html: `<div class="fc-event-title">${arg.event.title}</div>`
-      };
-    },
+function renderCalendar(month, year, pnlMap) {
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const startDay = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
 
-    // Tooltip for notes
-    eventDidMount: function(info) {
-      const notes = info.event.extendedProps.notes;
-      if (notes) {
-        new bootstrap.Tooltip(info.el, {
-          title: notes,
-          placement: 'top',
-          trigger: 'hover',
-          container: 'body'
-        });
-      }
-    }
-  });
+  calendarGrid.innerHTML = "";
 
-  calendar.render();
+  // Fill blank days before the 1st
+  for (let i = 0; i < startDay; i++) {
+    calendarGrid.innerHTML += `<div class="bg-white h-24"></div>`;
+  }
 
-  // 📊 Summary Badges
-  fetch('/calendar/summary')
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const pnl = pnlMap[dateStr] || 0;
+    const bg = pnl > 0 ? "bg-green-100" : pnl < 0 ? "bg-red-100" : "bg-white";
+    const text = pnl > 0 ? "text-green-800" : pnl < 0 ? "text-red-800" : "text-gray-800";
+
+    calendarGrid.innerHTML += `
+      <div class="${bg} h-24 p-2 text-left text-xs ${text} flex flex-col justify-between">
+        <div class="font-semibold">${day}</div>
+        ${pnl !== 0 ? `<div class="text-sm font-medium">₹${pnl.toFixed(2)}</div>` : ""}
+      </div>
+    `;
+  }
+
+  const monthName = new Date(year, month - 1).toLocaleString("default", { month: "long" });
+  monthLabel.textContent = `${monthName} ${year}`;
+}
+
+function fetchAndRender() {
+  fetch(`/calendar/events`)
     .then(res => res.json())
-    .then(data => {
-      const summary = document.getElementById('summary');
-      summary.innerHTML = `
-        <span class="px-3 py-1 bg-green-100 text-green-800 rounded">This Month: ₹${data.this_month}</span>
-        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded">Last 3 Months: ₹${data.last_3_months}</span>
-        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded">Quarter: ₹${data.quarter}</span>
-        <span class="px-3 py-1 bg-gray-200 text-gray-800 rounded">Year: ₹${data.year}</span>
-      `;
-    });
+    .then(pnlMap => renderCalendar(currentMonth, currentYear, pnlMap));
+}
 
-  // 📋 List View Table
-  fetch('/calendar/events')
-    .then(res => res.json())
-    .then(events => {
-      const list = document.getElementById('trade-list');
-      list.innerHTML = '';
-      events.forEach(ev => {
-        const pnl = parseFloat(ev.title.split('₹')[1]);
-        const color = pnl > 0 ? 'text-green-600' : pnl < 0 ? 'text-red-600' : 'text-yellow-600';
-        list.innerHTML += `
-          <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2">${ev.start}</td>
-            <td class="px-4 py-2">${ev.title.split(' ₹')[0]}</td>
-            <td class="px-4 py-2 ${color} font-semibold">₹${pnl}</td>
-            <td class="px-4 py-2">${ev.extendedProps.notes || '—'}</td>
-          </tr>
-        `;
-      });
-    });
+document.getElementById("prevMonth").onclick = () => {
+  currentMonth--;
+  if (currentMonth < 1) {
+    currentMonth = 12;
+    currentYear--;
+  }
+  window.location.href = `/calendar?month=${currentMonth}&year=${currentYear}`;
+};
 
-  // 🔄 Toggle View Buttons
-  document.getElementById('calendarBtn').onclick = () => {
-    document.getElementById('calendar-container').style.display = 'block';
-    document.getElementById('list-container').style.display = 'none';
-  };
-  document.getElementById('listBtn').onclick = () => {
-    document.getElementById('calendar-container').style.display = 'none';
-    document.getElementById('list-container').style.display = 'block';
-  };
-});
+document.getElementById("nextMonth").onclick = () => {
+  currentMonth++;
+  if (currentMonth > 12) {
+    currentMonth = 1;
+    currentYear++;
+  }
+  window.location.href = `/calendar?month=${currentMonth}&year=${currentYear}`;
+};
+
+fetchAndRender();
 </script>
-
-<!-- 🎨 Custom Styles -->
-<style>
-#calendar {
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.fc-event-title {
-  font-weight: bold;
-  font-size: 0.85em;
-  color: white;
-  padding: 2px 4px;
-  border-radius: 4px;
-  background-color: inherit;
-}
-</style>
-
 {% endblock %}
