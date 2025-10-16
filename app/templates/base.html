@@ -7,54 +7,50 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-  <!-- Quill CSS -->
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-  <!-- Quill JS -->
   <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-
 </head>
 <body>
-  {% if current_user.is_authenticated %}
-  <nav class="container-fluid">
-    <header style="display: flex; justify-content: space-between; align-items: center;">
-      <a href="{{ url_for('trades.dashboard') }}">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:50px;">
-      </a>
-      <button class="menu-toggle" onclick="document.querySelector('nav ul').classList.toggle('show')">☰</button>
-    </header>
 
-    <ul>
-      <li><a href="{{ url_for('trades.dashboard') }}" class="{% if request.endpoint == 'trades.dashboard' %}active{% endif %}">🏠 Dashboard</a></li>
-      <li><a href="{{ url_for('trades.add_trade') }}" class="{% if request.endpoint == 'trades.add_trade' %}active{% endif %}">➕ Add Trade</a></li>
-      <li><a href="{{ url_for('trades.trade_history') }}" class="{% if request.endpoint == 'trades.trade_history' %}active{% endif %}">📜 History</a></li>
-      <li><a href="{{ url_for('resources.show_resources') }}" class="{% if request.endpoint == 'resources.show_resources' %}active{% endif %}">🧰 Resources</a></li>
-      <li><a href="{{ url_for('risk.risk_calculator') }}" class="{% if request.endpoint == 'risk.risk_calculator' %}active{% endif %}">🧮 Calculator</a></li>
-      <li><a href="{{ url_for('notes.notes_page') }}" class="{% if request.endpoint == 'notes.notes_page' %}active{% endif %}">📝 Notes</a></li>
-      <li><a href="{{ url_for('stats.stats_dashboard') }}" class="{% if request.endpoint == 'stats.stats_dashboard' %}active{% endif %}">📊 Stats</a></li>
-      <li><a href="{{ url_for('calendar.calendar_view') }}" class="{% if request.endpoint == 'calendar.calendar_view' %}active{% endif %}">📅 Calendar</a></li>
-      <li><a href="{{ url_for('watchlist.add') }}" class="{% if request.endpoint == 'watchlist.add' %}active{% endif %}">📈 Watchlist</a></li>
-      <li><a href="{{ url_for('auth.logout') }}">🚪 Logout</a></li>
-    </ul>
-  </nav>
+{% if current_user.is_authenticated %}
+<nav class="container-fluid" style="padding: 4px 12px; background-color: #201f1f; border-bottom: 1px solid #412e9c;">
+  <div class="d-flex justify-content-between align-items-center" class="navbar-logo">
+    <a href="{{ url_for('trades.dashboard') }}">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:36px;">
+    </a>
+    <button type="button" class="menu-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('show')">☰</button>
+  </div>
+
+  <ul class="nav-menu d-flex flex-wrap align-items-center list-unstyled mt-2 mb-0" style="gap: 8px;">
+    <li><a href="{{ url_for('trades.dashboard') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.dashboard' %}active{% endif %}">🏠 Dashboard</a></li>
+    <li><a href="{{ url_for('trades.add_trade') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.add_trade' %}active{% endif %}">➕ Add Trade</a></li>
+    <li><a href="{{ url_for('trades.trade_history') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'trades.trade_history' %}active{% endif %}">📜 History</a></li>
+    <li><a href="{{ url_for('resources.show_resources') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'resources.show_resources' %}active{% endif %}">🧰 Resources</a></li>
+    <li><a href="{{ url_for('risk.risk_calculator') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'risk.risk_calculator' %}active{% endif %}">🧮 Calculator</a></li>
+    <li><a href="{{ url_for('notes.notes_page') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'notes.notes_page' %}active{% endif %}">📝 Notes</a></li>
+    <li><a href="{{ url_for('stats.stats_dashboard') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'stats.stats_dashboard' %}active{% endif %}">📊 Stats</a></li>
+    <li><a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'calendar.calendar_view' %}active{% endif %}">📅 Calendar</a></li>
+    <li><a href="{{ url_for('watchlist.add') }}" class="btn btn-sm btn-outline-secondary {% if request.endpoint == 'watchlist.add' %}active{% endif %}">📈 Watchlist</a></li>
+    <li><a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">🚪 Logout</a></li>
+  </ul>
+</nav>
+{% endif %}
+
+<main class="container-fluid">
+  {% if current_user.is_authenticated and pinned_resources %}
+  <div class="d-flex align-items-center justify-content-start mb-2" style="gap: 8px; flex-wrap: nowrap; overflow-x: auto;">
+    <strong style="white-space: nowrap;">📌 Pinned:</strong>
+    {% for r in pinned_resources %}
+    <a href="{{ url_for('resources.access_resource', id=r.id) }}" target="_blank" rel="noopener noreferrer"
+       class="btn btn-sm btn-outline-primary px-2 py-0" style="white-space: nowrap;">
+      🔗 {{ r.title }}
+    </a>
+    {% endfor %}
+  </div>
   {% endif %}
 
-  <main class="container-fluid">
-    {% if current_user.is_authenticated and pinned_resources %}
-    <div class="pinned-toolbar mb-3">
-      <h4>📌 Pinned Tools</h4>
-      <div class="btn-group flex-wrap" role="group" aria-label="Pinned Tools">
-        {% for r in pinned_resources %}
-        <!-- <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm me-2 mb-2">
-          🔗 {{ r.title }}
-        </a> -->
-        <a href="{{ url_for('resources.access_resource', id=r.id) }}" target="_blank" rel="noopener noreferrer">🔗{{ r.title }}</a>
+  {% block content %}{% endblock %}
+</main>
 
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    {% block content %}{% endblock %}
-  </main>
 </body>
 </html>

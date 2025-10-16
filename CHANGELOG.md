@@ -41,3 +41,9 @@
 - Added Stats charts for Profit/Loss by Date, week and Monthly bars
 - Corrected Remaining quantity after partial exits, Realized PnL after Partial Exit, corrected invested amount for remaining quantity. 
 - On Dashboard Page added remaining quantity column in the table, added visual indicator for partial exits
+
+## [v1.3.0] - 2025-10-04
+### Added
+- Menu view modified, Toggle menu bug fix
+- Pinned Tools Made Compact
+- Dashboard page status merged to stock name
