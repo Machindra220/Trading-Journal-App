@@ -46,3 +46,4 @@
 ### Added
 - Menu view modified, Toggle menu bug fix
 - Pinned Tools Made Compact
+- Dashboard page status merged to stock name
