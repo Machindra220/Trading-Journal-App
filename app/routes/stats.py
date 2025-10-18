@@ -86,11 +86,11 @@ def stats_dashboard():
 
     for t in closed_trades:
         if t.exit_date and calculate_realized_pnl(t) != 0:
-            date_label = t.exit_date.strftime("%Y-%b-%d")  # e.g., "Apr-05"
+            date_label = t.exit_date.strftime("%d-%b-%Y")  # e.g., "Apr-05"= %Y-%b-%d
             daily_pnl[date_label] += calculate_realized_pnl(t)
 
     # Convert to sorted list of bars
-    sorted_days = sorted(daily_pnl.items(), key=lambda x: datetime.strptime(x[0], "%Y-%b-%d"))
+    sorted_days = sorted(daily_pnl.items(), key=lambda x: datetime.strptime(x[0], "%d-%b-%Y"))
     trade_bars = [{"date": label, "pnl": round(pnl, 2)} for label, pnl in sorted_days[-10:]]
     
     # 📊 Weekly Profit/Loss Bar Chart Data
@@ -99,11 +99,11 @@ def stats_dashboard():
     for t in closed_trades:
         if t.exit_date and calculate_realized_pnl(t) != 0:
             week_start = t.exit_date - timedelta(days=t.exit_date.weekday())  # Monday of the week
-            week_label = week_start.strftime("Week of %b %d")  # e.g., "Week of Oct 06"
+            week_label = week_start.strftime("Week of %d %b")  # e.g., "Week of Oct 06"
             weekly_pnl[week_label] += calculate_realized_pnl(t)
 
     # Sort by week and keep last 10
-    sorted_weeks = sorted(weekly_pnl.items(), key=lambda x: datetime.strptime(x[0], "Week of %b %d"))
+    sorted_weeks = sorted(weekly_pnl.items(), key=lambda x: datetime.strptime(x[0], "Week of %d %b"))
     weekly_bars = [{"week": label, "pnl": round(pnl, 2)} for label, pnl in sorted_weeks[-10:]]
 
     # 📊 Monthly Profit/Loss Bar Chart Data
