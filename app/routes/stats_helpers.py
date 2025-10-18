@@ -22,7 +22,7 @@ def get_equity_curve(trades):
         peak = max(peak, equity)
         drawdown = peak - equity
         max_drawdown = max(max_drawdown, drawdown)
-        curve.append({'date': t.exit_date.strftime('%Y-%m-%d'), 'value': equity})
+        curve.append({'date': t.exit_date.strftime('%d-%m-%Y'), 'value': equity})
     return curve, max_drawdown
 
 def get_stock_stats(trades):

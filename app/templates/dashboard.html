@@ -127,6 +127,45 @@
   </div>
 </div>
 
+<!-- incomplete trades -->
+{% if incomplete_trades %}
+  <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+    <h3 class="text-lg font-semibold text-yellow-800 mb-2">⚠️ Incomplete Trades</h3>
+    <p class="text-sm text-yellow-700 mb-3">These stocks have no buy/sell entries yet:</p>
+    <ul class="space-y-2">
+      {% for t in incomplete_trades %}
+        <li class="flex items-center justify-between bg-white border border-yellow-200 rounded px-4 py-2 shadow-sm">
+          <span class="text-sm font-medium text-yellow-900">{{ t.stock_name }}</span>
+          <div class="flex gap-2">
+            <!-- 🔍 View -->
+            <a href="{{ url_for('trades.view_trade', trade_id=t.id) }}"
+               class="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700  transition">
+              🔍 
+            </a>
+
+            <!-- ✏️ Edit -->
+            <a href="{{ url_for('trades.edit_trade', trade_id=t.id) }}"
+               class="px-2 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 transition">
+              ✏️ 
+            </a>
+
+            <!-- 🗑️ Delete -->
+            <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=t.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit"
+                      onclick="return confirm('Delete trade for {{ t.stock_name }}?')"
+                      class="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition">
+                🗑️ 
+              </button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+
 <!-- 🧠 Modal Logic -->
 <script>
 function openTradeModal(button) {

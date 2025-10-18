@@ -30,30 +30,31 @@
 <hr class="my-6">
 
 <!-- 📋 Notes List -->
-<div class="max-w-5xl mx-auto">
+<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   {% for note in notes %}
-  <div class="mb-6 p-4 border border-gray-200 rounded shadow-sm bg-white">
+  <div class="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition">
     <!-- 🗓️ Note Header -->
-    <div class="mb-2 text-gray-700 font-medium">
-      <strong>{{ note.date }}</strong> — {{ note.summary }}
+    <div class="mb-3 text-sm text-gray-600 flex justify-between items-center">
+      <span class="font-semibold">{{ note.date }}</span>
+      <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">{{ note.summary }}</span>
     </div>
 
     <!-- 📄 Note Content -->
-    <div class="mb-2 prose max-w-none">
+    <div class="prose max-w-none text-sm text-gray-800 mb-3">
       {{ note.content | safe }}
     </div>
 
     <!-- 🖼️ Note Images -->
     {% if note.images %}
-    <div class="flex flex-wrap gap-4 mb-2">
+    <div class="flex flex-wrap gap-3 mb-3">
       {% for img in note.images %}
-      <div class="relative">
+      <div class="relative group">
         <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
-             class="rounded border max-w-[150px]">
+             class="rounded border w-[120px] h-[120px] object-cover shadow-sm">
         <form method="POST"
               action="{{ url_for('notes.delete_image', id=img.id) }}"
               onsubmit="return confirm('Delete image?')"
-              class="absolute top-1 right-1">
+              class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition">
           <button type="submit"
                   class="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700">
             ❌
@@ -65,7 +66,7 @@
     {% endif %}
 
     <!-- 🛠️ Note Actions -->
-    <div class="flex gap-2">
+    <div class="flex justify-end gap-2">
       <a href="{{ url_for('notes.edit_note', id=note.id) }}"
          class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition">
         ✏️ Edit
@@ -83,14 +84,21 @@
   {% endfor %}
 </div>
 
+
 <!-- 🧾 Note Modal -->
 <div id="note-modal"
      class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-  <form method="POST"
+  <!-- <form method="POST"
         action="{{ url_for('notes.add_note') }}"
         enctype="multipart/form-data"
         onsubmit="syncEditor()"
-        class="bg-white p-6 rounded shadow-md w-full max-w-lg space-y-4">
+        class="bg-white p-6 rounded shadow-md w-full max-w-lg space-y-4"> -->
+  <form method="POST"
+      action="{{ url_for('notes.add_note') }}"
+      enctype="multipart/form-data"
+      onsubmit="syncEditor()"
+      class="bg-white p-6 rounded shadow-md w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

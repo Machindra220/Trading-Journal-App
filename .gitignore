@@ -13,3 +13,4 @@ docker-compose.yml
 .dockerignore
 generate_schema.py
 history_commands.txt
+static/uploads/

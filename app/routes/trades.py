@@ -43,9 +43,9 @@ def dashboard():
         realized_profit = sum((x.price - avg_entry_price) * x.quantity for x in trade.exits)
         
 
-        # Get first entry details
+        # Get first entry details - %d/%m/%y | %d %b %Y
         first_entry = trade.entries[0]
-        entry_date = first_entry.date.strftime('%d %b %Y')
+        entry_date = first_entry.date.strftime('%d/%m/%y')
         note = first_entry.note if first_entry.note else '—'
 
         if trade.status == "Open":
@@ -64,7 +64,22 @@ def dashboard():
             })
             total_invested_open += invested_remaining
 
-    return render_template('dashboard.html', trades=trade_data, total_invested=total_invested_open)
+    # 🔍 Identify trades with no entries and no exits
+        incomplete_trades = Trade.query.filter_by(user_id=current_user.id, status='Open') \
+            .filter(~Trade.entries.any(), ~Trade.exits.any()).all()
+
+        incomplete_trade_data = [
+            {'id': t.id, 'stock_name': t.stock_name.upper()}
+            for t in incomplete_trades
+        ]
+
+
+    return render_template(
+        'dashboard.html',
+        trades=trade_data,
+        total_invested=total_invested_open,
+        incomplete_trades=incomplete_trade_data
+    )
 
 
 #Backend Route: add_trade
@@ -448,12 +463,13 @@ def trade_history():
         total_quantity = sum(e.quantity for e in trade.entries)
         total_invested = sum(e.quantity * e.price for e in trade.entries)
         avg_entry_price = round(total_invested / total_quantity, 2) if total_quantity else 0
-
+        
         total_exited = sum(x.quantity * x.price for x in trade.exits)
         avg_exit_price = round(total_exited / total_quantity, 2) if total_quantity else 0
 
         realized_pnl = round(total_exited - total_invested, 2)
         total_days = (trade.exit_date - trade.entry_date).days if trade.entry_date and trade.exit_date else 0
+        return_pct = round((realized_pnl / total_invested) * 100, 2) if total_invested else 0
 
         entry_notes = [e.note for e in trade.entries if e.note]
         exit_notes = [x.note for x in trade.exits if x.note]
@@ -467,7 +483,9 @@ def trade_history():
             'avg_entry_price': avg_entry_price,
             'avg_exit_price': avg_exit_price,
             'total_quantity': total_quantity,
+            'total_invested': round(total_invested, 2),
             'realized_pnl': realized_pnl,
+            'return_pct': return_pct,
             'total_days': total_days,
             'notes': combined_notes
         })

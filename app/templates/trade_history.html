@@ -82,7 +82,8 @@
           <th class="px-4 py-2">Exit</th>
           <th class="px-4 py-2">Entry (Avg)</th>
           <th class="px-4 py-2">Exit (Avg)</th>
-          <th class="px-4 py-2">Quantity</th>
+          <th class="px-4 py-2">Qty</th>
+          <th class="px-4 py-2">Inv. Amount</th>
           <th class="px-4 py-2">Duration</th>
           <th class="px-4 py-2">Realized P&L</th>
           <th class="px-4 py-2">Notes</th>
@@ -93,19 +94,29 @@
         {% for t in trades %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-2">{{ t.stock_name }}</td>
-          <td class="px-4 py-2">{{ t.entry_date.strftime('%d %b %Y') if t.entry_date else '—' }}</td>
-          <td class="px-4 py-2">{{ t.exit_date.strftime('%d %b %Y') if t.exit_date else '—' }}</td>
+          <td class="px-4 py-2">{{ t.entry_date.strftime('%d/%m/%y') if t.entry_date else '—' }}</td>
+          <td class="px-4 py-2">{{ t.exit_date.strftime('%d/%m/%y') if t.exit_date else '—' }}</td>
           <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_entry_price) }}</td>
           <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_exit_price) }}</td>
           <td class="px-4 py-2">{{ t.total_quantity }}</td>
+          <td class="px-4 py-2 {% if t.total_invested > 100000 %}text-blue-700 font-semibold{% endif %}">
+            ₹{{ "%.2f"|format(t.total_invested) }}
+          </td>
           <td class="px-4 py-2">{{ t.total_days }} days</td>
           <td class="px-4 py-2" style="background-color: {{ 'rgba(40,167,69,0.1)' if t.realized_pnl >= 0 else 'rgba(220,53,69,0.1)' }};">
             {% if t.realized_pnl >= 0 %}
-              <span style="color:green;">▲ ₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+              <span style="color:green;">
+                ▲ ₹{{ "%.2f"|format(t.realized_pnl) }}
+                <span class="text-sm text-green-700">({{ "%.2f"|format(t.return_pct) }}%)</span>
+              </span>
             {% else %}
-              <span style="color:red;">▼ ₹{{ "%.2f"|format(t.realized_pnl) }}</span>
+              <span style="color:red;">
+                ▼ ₹{{ "%.2f"|format(t.realized_pnl) }}
+                <span class="text-sm text-red-700">({{ "%.2f"|format(t.return_pct) }}%)</span>
+              </span>
             {% endif %}
-          </td>
+         </td>
+
           <td class="px-4 py-2">{{ t.notes or '—' }}</td>
           <td class="px-4 py-2 whitespace-nowrap">
             <div class="flex gap-2">
