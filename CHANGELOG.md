@@ -62,3 +62,7 @@
 - Responsive flex layout with sm:flex-row
 - Hover states improved for links
 - Global layout uses flex flex-col min-h-screen to ensure sticky footer behavior
+
+## [v1.5.0] - 2025-10-18
+### Added
+- List Top 20 Performers from NSE 200, NSE 500 and BSE 200

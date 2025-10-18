@@ -15,7 +15,11 @@ def get_1yr_return(symbol, suffix=".NS"):
             return None
         start_price = hist["Close"].iloc[0]
         end_price = hist["Close"].iloc[-1]
-        return round(((end_price - start_price) / start_price) * 100, 2)
+        return {
+            "start_price": round(start_price, 2),
+            "end_price": round(end_price, 2),
+            "return_pct": round(((end_price - start_price) / start_price) * 100, 2)
+        }
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
         return None
@@ -31,9 +35,14 @@ def get_top_performers(csv_file, top_n=12, suffix=".NS"):
         results = []
 
         for symbol in df["symbol"]:
-            ret = get_1yr_return(symbol, suffix)
-            if ret is not None:
-                results.append({"symbol": symbol, "return_pct": ret})
+            data = get_1yr_return(symbol, suffix)
+            if data:
+                results.append({
+                    "symbol": symbol,
+                    "start_price": data["start_price"],
+                    "end_price": data["end_price"],
+                    "return_pct": data["return_pct"]
+                })
 
         top_df = pd.DataFrame(results).sort_values(by="return_pct", ascending=False).head(top_n)
         top_df.reset_index(drop=True, inplace=True)
@@ -52,13 +61,21 @@ def top_performers():
     n200_set = set([s["symbol"] for s in nifty_200])
     n500_set = set([s["symbol"] for s in nifty_500])
     bse_set = set([s["symbol"] for s in bse_200])
-    overlaps = n200_set & n500_set & bse_set
+    # overlaps = n200_set & n500_set & bse_set
+    
+    overlap_n200_bse = n200_set & bse_set
+    overlap_n200_n500 = n200_set & n500_set
+    overlap_bse_n500 = bse_set & n500_set
+    overlap_all = n200_set & bse_set & n500_set
 
     return render_template("top_performers.html",
                            nifty_200=nifty_200,
                            nifty_500=nifty_500,
                            bse_200=bse_200,
-                           overlaps=overlaps)
+                           overlap_n200_bse=overlap_n200_bse,
+                           overlap_n200_n500=overlap_n200_n500,
+                           overlap_bse_n500=overlap_bse_n500,
+                           overlap_all=overlap_all)
 
 @performers_bp.route("/upload-csv", methods=["POST"])
 def upload_csv():
