@@ -6,6 +6,8 @@
   <title>Portfolio App</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet"> -->
+
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 </head>
@@ -36,25 +38,16 @@
         <li><a href="{{ url_for('trades.add_trade') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.add_trade' else inactive }}">➕ Add Trade</a></li>
         <li><a href="{{ url_for('trades.trade_history') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'trades.trade_history' else inactive }}">📜 History</a></li>
         <li><a href="{{ url_for('resources.show_resources') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'resources.show_resources' else inactive }}">🧰 Resources</a></li>
-        <!-- Resources Dropdown (Desktop) -->
-        <!-- Resources Dropdown (Desktop) -->
-        <!-- <li class="relative group">
-          <div class="px-3 py-1 rounded cursor-pointer {{ active if request.endpoint == 'resources.show_resources' else inactive }}">
-            🧰 Resources ▾
-          </div>
-          <ul class="absolute left-0 top-full hidden group-hover:flex flex-col bg-white text-blue-800 border border-gray-200 rounded shadow-md mt-1 min-w-[160px] z-50">
-            <li><a href="{{ url_for('resources.show_resources') }}" class="block px-4 py-2 hover:bg-blue-100">All Resources</a></li>
-            <li><a href="{{ url_for('risk.risk_calculator') }}" class="block px-4 py-2 hover:bg-blue-100">🧮 Calculator</a></li>
-            <li><a href="{{ url_for('notes.notes_page') }}" class="block px-4 py-2 hover:bg-blue-100">📝 Notes</a></li>
-            <li><a href="{{ url_for('calendar.calendar_view') }}" class="block px-4 py-2 hover:bg-blue-100">📅 Calendar</a></li>
-          </ul>
-        </li> -->
-
         <li><a href="{{ url_for('risk.risk_calculator') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'risk.risk_calculator' else inactive }}">🧮 Calculator</a></li>
         <li><a href="{{ url_for('notes.notes_page') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'notes.notes_page' else inactive }}">📝 Notes</a></li>
         <li><a href="{{ url_for('stats.stats_dashboard') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'stats.stats_dashboard' else inactive }}">📊 Stats</a></li>
         <li><a href="{{ url_for('calendar.calendar_view') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'calendar.calendar_view' else inactive }}">📅 Calendar</a></li>
-        <li><a href="{{ url_for('performers.top_performers') }}" class="px-3 py-1 rounded">📈 Top Performers</a></li>
+        <li><a href="{{ url_for('performers.top_performers') }}" class="px-3 py-1 rounded {{ 'font-semibold' if request.endpoint == 'performers.top_performers' else inactive }}">📈 Performers</a></li>
+        <li><a href="{{ url_for('delivery.delivery_surge') }}" class="px-3 py-1 rounded {{ 'font-semibold' if request.endpoint == 'delivery.delivery_surge' else inactive }}">🚀 Delivery</a></li>
+        <li><a href="{{ url_for('screener.stage2_view') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'screener.stage2_view' else inactive }}">📊 Stage 2 Screener</a></li>
+        <li><a href="{{ url_for('screener.stage2_saved') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'screener.stage2_saved' else inactive }}">📦 Saved Stage 2</a></li>
+        <li><a href="{{ url_for('screener.sector_analysis') }}" class="px-3 py-2 hover:text-blue-600">📊 Sector Analysis</a></li>
+
         <li><a href="{{ url_for('watchlist.add') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'watchlist.add' else inactive }}">📈 Watchlist</a></li>
         <li><a href="{{ url_for('auth.logout') }}" class="px-3 py-1 border border-red-300 text-red-300 hover:bg-red-100 rounded">🚪 Logout</a></li>
       </ul>
@@ -77,6 +70,8 @@
     <li><a href="{{ url_for('notes.notes_page') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'notes.notes_page' else inactive }}">📝 Notes</a></li>
     <li><a href="{{ url_for('stats.stats_dashboard') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'stats.stats_dashboard' else inactive }}">📊 Stats</a></li>
     <li><a href="{{ url_for('calendar.calendar_view') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'calendar.calendar_view' else inactive }}">📅 Calendar</a></li>
+    <li><a href="{{ url_for('performers.top_performers') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'performers.top_performers' else inactive }}">📈 Top Performers</a></li>
+    <li><a href="{{ url_for('delivery.delivery_surge') }}" class="px-3 py-1 rounded {{ active if request.endpoint == 'delivery.delivery_surge' else inactive }}">Delivery Surge</a></li>
     <li><a href="{{ url_for('watchlist.add') }}" class="block px-3 py-2 rounded {{ active if request.endpoint == 'watchlist.add' else inactive }}">📈 Watchlist</a></li>
     <li><a href="{{ url_for('auth.logout') }}" class="block px-3 py-2 border border-red-300 text-red-300 hover:bg-red-100 rounded">🚪 Logout</a></li>
   </ul>
@@ -107,7 +102,7 @@
       © 2025 Portfolio App — Built with ❤️ by Machindra
     </div>
     <div class="flex gap-4">
-      <a href="https://github.com/your-repo" target="_blank" class="hover:text-indigo-600">GitHub</a>
+      <a href="https://github.com/Machindra220" target="_blank" class="hover:text-indigo-600">GitHub</a>
       <a href="{{ url_for('resources.show_resources') }}" class="hover:text-indigo-600">Resources</a>
       <a href="{{ url_for('auth.logout') }}" class="hover:text-red-600">Logout</a>
     </div>

@@ -3,6 +3,11 @@ import pandas as pd
 import yfinance as yf
 import os
 from functools import lru_cache
+from datetime import datetime, timedelta
+# from app.utils.delivery_screener import filter_delivery_surge_stocks
+
+
+
 
 performers_bp = Blueprint("performers", __name__)
 
@@ -15,10 +20,12 @@ def get_1yr_return(symbol, suffix=".NS"):
             return None
         start_price = hist["Close"].iloc[0]
         end_price = hist["Close"].iloc[-1]
+        last_processed_time = datetime.now()  # or from your data pipeline
         return {
             "start_price": round(start_price, 2),
             "end_price": round(end_price, 2),
-            "return_pct": round(((end_price - start_price) / start_price) * 100, 2)
+            "return_pct": round(((end_price - start_price) / start_price) * 100, 2),
+            "last_processed_time": last_processed_time 
         }
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
@@ -88,3 +95,66 @@ def upload_csv():
     file.save(save_path)
     flash(f"Uploaded {file.filename} successfully.", "info")
     return redirect(url_for("performers.top_performers"))
+
+# delivery_surge screener code
+# app/utils/delivery_screener.py
+
+def load_nifty500_tickers():
+    df = pd.read_csv("data/nifty_500.csv")
+    df.columns = df.columns.str.strip().str.lower()
+    return [s + ".NS" for s in df["symbol"].dropna().unique()]
+
+def analyze_stock(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        market_cap = info.get("marketCap", 0)
+        if market_cap < 100 * 10**7:
+            return None
+
+        hist = stock.history(period="15d")
+        if hist.empty or len(hist) < 5:
+            return None
+
+        latest = hist.iloc[-1]
+        avg_volume = hist["Volume"][:-1].mean()
+        delivery_spike = latest["Volume"] / avg_volume
+
+        return {
+            "ticker": ticker,
+            "current_price": latest["Close"],
+            "price_change": latest["Close"] - latest["Open"],
+            "price_change_pct": round((latest["Close"] - latest["Open"]) / latest["Open"] * 100, 2),
+            "volume": int(latest["Volume"]),
+            "delivery_spike": round(delivery_spike, 2),
+            "market_cap": market_cap
+        }
+    except Exception as e:
+        print(f"Error analyzing {ticker}: {e}")
+        return None
+
+def filter_delivery_surge_stocks():
+    tickers = load_nifty500_tickers()
+    results = []
+    for ticker in tickers:
+        data = analyze_stock(ticker)
+        if not data:
+            continue
+        if (
+            data["price_change"] > 0 and
+            data["volume"] > 20000 and
+            data["delivery_spike"] >= 4
+        ):
+            results.append(data)
+    results.sort(key=lambda x: x["delivery_spike"], reverse=True)
+    return results
+
+# app/routes/performers.py
+
+delivery_bp = Blueprint("delivery", __name__)
+
+@delivery_bp.route("/delivery-surge")
+def delivery_surge():
+    stocks = filter_delivery_surge_stocks()
+    last_processed_time = datetime.now()
+    return render_template("delivery_surge.html", stocks=stocks, last_processed_time=last_processed_time)

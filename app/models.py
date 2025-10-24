@@ -143,3 +143,15 @@ class Watchlist(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     user = db.relationship('User', backref='watchlist_items')
+
+# Stage2Stock models.py
+class Stage2Stock(db.Model):
+    __tablename__ = 'stage2_stocks'
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    price = db.Column(db.Float)
+    ma_30w = db.Column(db.Float)
+    volume = db.Column(db.BigInteger)
+    vol_avg = db.Column(db.BigInteger)
+    rs = db.Column(db.Float)

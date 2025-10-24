@@ -28,13 +28,24 @@
   <div id="loading" class="text-center text-blue-600 font-semibold text-lg my-8">
     🔄 Processing stock returns... please wait.
   </div>
-  <div class="mb-4 text-sm text-gray-700 space-y-1">
-  <div><span class="inline-block w-4 h-4 bg-purple-100 mr-2"></span> In all three indices</div>
-  <div><span class="inline-block w-4 h-4 bg-green-100 mr-2"></span> In Nifty 200 & BSE 200</div>
-  <div><span class="inline-block w-4 h-4 bg-yellow-100 mr-2"></span> In Nifty 200 & Nifty 500</div>
-  <div><span class="inline-block w-4 h-4 bg-pink-100 mr-2"></span> In BSE 200 & Nifty 500</div>
-</div>
+  <div class="mb-4 text-sm text-gray-700 flex flex-wrap gap-x-6 gap-y-2">
+    <div class="flex items-center">
+      <span class="inline-block w-4 h-4 bg-purple-100 mr-2 rounded"></span> In all three indices
+    </div>
+    <div class="flex items-center">
+      <span class="inline-block w-4 h-4 bg-green-100 mr-2 rounded"></span> In Nifty 200 & BSE 200
+    </div>
+    <div class="flex items-center">
+      <span class="inline-block w-4 h-4 bg-yellow-100 mr-2 rounded"></span> In Nifty 200 & Nifty 500
+    </div>
+    <div class="flex items-center">
+      <span class="inline-block w-4 h-4 bg-pink-100 mr-2 rounded"></span> In BSE 200 & Nifty 500
+    </div>
+  </div>
 
+  <div class="text-sm text-gray-600 mb-4">
+      Last updated: {{ last_processed_time.strftime('%d %b %Y, %H:%M') }}
+  </div>
 
   <div id="tables" class="hidden">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

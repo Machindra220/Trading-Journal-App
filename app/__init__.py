@@ -29,10 +29,13 @@ def create_app():
     from app.routes.calendar import calendar_bp
     from app.routes.watchlist import watchlist_bp
     from app.routes.risk_calculator import risk_bp
-    from app.routes.performers import performers_bp
+    from app.routes.performers import performers_bp, delivery_bp
+    from app.routes.screener import screener_bp
 
 
-
+    
+    app.register_blueprint(screener_bp, url_prefix="/screener")
+    # app.register_blueprint(performers_bp)
     app.register_blueprint(risk_bp, url_prefix='/tools')
     app.register_blueprint(calendar_bp)
     app.register_blueprint(auth_bp)
@@ -42,7 +45,13 @@ def create_app():
     app.register_blueprint(resources_bp, url_prefix='/resources')    
     app.register_blueprint(notes_bp)
     app.register_blueprint(watchlist_bp)
-    app.register_blueprint(performers_bp)
+    # app.register_blueprint(performers_bp)
+    # # app.register_blueprint(performers_bp, url_prefix="/performers")
+    # # app.register_blueprint(performers_bp, url_prefix="/delivery-surge")
+    # app.register_blueprint(delivery_bp, url_prefix="/delivery-surge")
+    app.register_blueprint(performers_bp, url_prefix="/performers")
+    app.register_blueprint(delivery_bp, url_prefix="/delivery")
+
 
     # Home route
     @app.route('/')

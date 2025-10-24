@@ -1,0 +1,34 @@
+<!-- templates/delivery_surge.html -->
+{% extends "base.html" %}
+{% block title %}Delivery Surge Screener{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-2">📈 Delivery Surge Screener</h1>
+    <p class="text-sm text-gray-600 mb-4">Last updated: {{ last_processed_time.strftime('%d %b %Y, %H:%M') }}</p>
+
+    <table class="table-auto w-full bg-white shadow-md rounded">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="px-4 py-2">#</th>
+                <th class="px-4 py-2">Ticker</th>
+                <th class="px-4 py-2">Price</th>
+                <th class="px-4 py-2">Change %</th>
+                <th class="px-4 py-2">Volume</th>
+                <th class="px-4 py-2">Delivery Spike</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+            <tr class="border-t">
+                <td class="px-4 py-2">{{ loop.index }}</td>
+                <td class="px-4 py-2 font-semibold">{{ stock.ticker }}</td>
+                <td class="px-4 py-2">₹{{ "%.2f"|format(stock.current_price) }}</td>
+                <td class="px-4 py-2 text-green-600">{{ stock.price_change_pct }}%</td>
+                <td class="px-4 py-2">{{ "{:,}".format(stock.volume) }}</td>
+                <td class="px-4 py-2">{{ stock.delivery_spike }}x</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
