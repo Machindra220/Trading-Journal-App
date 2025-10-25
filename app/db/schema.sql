@@ -94,3 +94,15 @@ CREATE TABLE public.watchlist (
     status VARCHAR(20) DEFAULT 'Open' NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- stage2_stocks last 30 days entries
+CREATE TABLE stage2_stocks (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    date DATE NOT NULL,
+    price NUMERIC(10, 2),
+    ma_30w NUMERIC(10, 2),
+    volume BIGINT,
+    vol_avg BIGINT,
+    rs NUMERIC(10, 2)
+);

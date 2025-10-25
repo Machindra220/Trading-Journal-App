@@ -67,3 +67,7 @@
 ### Added
 - List Top 20 Performers from NSE 200, NSE 500 and BSE 200
 - Added Incomplete Trades with no buy/sell entries
+- Added Screeners -Stage 2 stocks, Delivery Surge > 4x, Sector Analysis
+- Stage 2 stocks saved to database from last 30 days
+- Sectorwise stage 2 stocks screener
+- Collapsible vertical sidebar navigation menu

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-2">📦 Saved Stage 2 Stocks (Last 30 Days)</h2>
+
+{% if error %}
+  <p class="text-red-600 bg-red-100 border border-red-300 rounded px-4 py-2 mb-4">
+    {{ error }}
+  </p>
+{% elif stocks %}
+  <p class="text-sm text-gray-600 mb-4">Showing stocks screened and saved in the database.</p>
+  <button onclick="resetSort()" class="bg-gray-200 hover:bg-gray-300 text-sm px-3 py-1 rounded mb-2">
+  🔄 Reset Sort
+</button>
+
+
+  <table class="min-w-full bg-white rounded shadow">
+    <thead class="bg-blue-100 text-left">
+      <tr>
+        <th class="px-4 py-2">#</th>
+        <th class="px-4 py-2">Date</th>
+        <th class="px-4 py-2">Symbol</th>
+        <th class="px-4 py-2">Price</th>
+        <th class="px-4 py-2">30W MA</th>
+        <th onclick="toggleSort('volume')" data-sort="desc" class="sortable">Volume ▲</th>
+        <th onclick="toggleSort('vol_avg')" data-sort="desc" class="sortable">Avg Volume ▲</th>
+        <th onclick="toggleSort('rs')" data-sort="desc" class="sortable">Rel Strength ▲</th>
+        <th onclick="toggleSort('days_present')" data-sort="desc" class="sortable">Days Present ▲</th>
+        <th class="px-4 py-2">Tag</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stock in stocks %}
+      <tr class="border-t">
+        <td class="px-4 py-2">{{ loop.index }}</td>
+        <td class="px-4 py-2">{{ stock.date.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td class="px-4 py-2 flex items-center gap-2">
+          <span>{{ stock.symbol }}</span>
+          <button onclick="copyToClipboard('{{ stock.symbol }}')" class="text-blue-600 hover:underline text-sm">📋 Copy</button>
+        </td>
+        <td class="px-4 py-2">{{ stock.price }}</td>
+        <td class="px-4 py-2">{{ stock.ma_30w }}</td>
+        <td class="px-4 py-2" data-key="volume">{{ stock.volume }}</td>
+        <td class="px-4 py-2" data-key="vol_avg">{{ stock.vol_avg }}</td>
+        <td class="px-4 py-2" data-key="rs">{{ stock.rs }}</td>
+        <td class="px-4 py-2" data-key="days_present">{{ stock.days_present }}</td>
+        <td class="px-4 py-2">{{ stock.tag }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="text-yellow-600 bg-yellow-100 border border-yellow-300 rounded px-4 py-2 mt-4">
+    No Stage 2 stocks saved in the last 30 days.
+  </p>
+{% endif %}
+<!-- 
+<script>
+let sortState = [];
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`Copied: ${text}`);
+  });
+}
+
+function toggleSort(key) {
+  const header = document.querySelector(`th[onclick="toggleSort('${key}')"]`);
+  const currentOrder = header.getAttribute("data-sort");
+  const newOrder = currentOrder === "asc" ? "desc" : "asc";
+  header.setAttribute("data-sort", newOrder);
+  header.innerHTML = header.innerHTML.replace(/▲|▼/, newOrder === "asc" ? "▼" : "▲");
+
+  sortState = sortState.filter(s => s.key !== key);
+  sortState.unshift({ key, order: newOrder });
+
+  applyMultiSort();
+}
+
+function applyMultiSort() {
+  const rows = Array.from(document.querySelectorAll("tbody tr"));
+  rows.sort((a, b) => {
+    for (const { key, order } of sortState) {
+      const valA = parseFloat(a.querySelector(`[data-key="${key}"]`).textContent) || 0;
+      const valB = parseFloat(b.querySelector(`[data-key="${key}"]`).textContent) || 0;
+      if (valA !== valB) {
+        return order === "asc" ? valA - valB : valB - valA;
+      }
+    }
+    return 0;
+  });
+
+  const tbody = document.querySelector("tbody");
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
+}
+</script> -->
+
+{% endblock %}

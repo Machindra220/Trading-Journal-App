@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">📊 Sector Analysis</h2>
+
+{% if error %}
+  <p class="text-red-600 bg-red-100 border border-red-300 rounded px-4 py-2 mb-4">
+    {{ error }}
+  </p>
+{% elif sectors %}
+  <table class="min-w-full bg-white rounded shadow">
+    <thead class="bg-blue-100 text-left">
+      <tr>
+        <th class="px-4 py-2">#</th>
+        <th class="px-4 py-2">Sector</th>
+        <th class="px-4 py-2">Price</th>
+        <th class="px-4 py-2">30W MA</th>
+        <th class="px-4 py-2">Rel Strength</th>
+        <th class="px-4 py-2">Tag</th>
+        <th class="px-4 py-2">Top Stocks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in sectors %}
+      <tr class="border-t">
+        <td class="px-4 py-2">{{ s.serial }}</td>
+        <td class="px-4 py-2">{{ s.sector }}</td>
+        <td class="px-4 py-2">{{ s.price }}</td>
+        <td class="px-4 py-2">{{ s.ma_30w }}</td>
+        <td class="px-4 py-2">{{ s.rs }}</td>
+        <td class="px-4 py-2">{{ s.tag }}</td>
+        <td class="px-4 py-2">
+          <a href="{{ url_for('screener.sector_stocks', sector=s.sector) }}" class="text-blue-600 hover:underline">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="text-yellow-600 bg-yellow-100 border border-yellow-300 rounded px-4 py-2 mt-4">
+    No sector data available.
+  </p>
+{% endif %}
+{% endblock %}
