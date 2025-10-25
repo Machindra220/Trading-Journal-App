@@ -7,6 +7,12 @@
     {{ error }}
   </p>
 {% else %}
+{% if summary_message %}
+  <p class="text-green-700 bg-green-100 border border-green-300 rounded px-4 py-2 mb-4">
+    {{ summary_message }}
+  </p>
+{% endif %}
+
   <p class="text-sm text-gray-600 mb-4">Last processed: {{ last_processed_time }}</p>
   <p class="text-sm text-gray-600 mb-1">Source: {{ source_name }}</p>
 
@@ -18,8 +24,8 @@
         <th class="px-4 py-2">Symbol</th>
         <th class="px-4 py-2">Price</th>
         <th class="px-4 py-2">30W MA</th>
-        <th class="px-4 py-2">Volume</th>
-        <th class="px-4 py-2">Avg Volume</th>
+        <th onclick="toggleSort('volume')" data-sort="desc">Volume ▲</th>
+        <th onclick="toggleSort('vol_avg')" data-sort="desc">Avg Volume ▲</th>
         <th class="px-4 py-2">Rel Strength</th>
         <th class="px-4 py-2">Persistence</th>
         <th class="px-4 py-2">Tag</th>
@@ -34,11 +40,11 @@
           <button onclick="copyToClipboard('{{ stock.symbol_clean }}')" class="text-blue-600 hover:underline text-sm">📋 Copy</button>
         </td>
         <td class="px-4 py-2">{{ stock.price }}</td>
-        <td class="px-4 py-2">{{ stock['30w_ma'] }}</td>
-        <td class="px-4 py-2">{{ stock.volume }}</td>
-        <td class="px-4 py-2">{{ stock.vol_avg }}</td>
-        <td class="px-4 py-2">{{ stock.rs }}</td>
-        <td class="px-4 py-2">{{ stock.persistence }}</td>
+        <td class="px-4 py-2">{{ stock.ma_30w }}</td>
+        <td class="px-4 py-2" data-key="volume">{{ stock.volume }}</td>
+        <td class="px-4 py-2" data-key="vol_avg">{{ stock.vol_avg }}</td>
+        <td class="px-4 py-2" data-key="rs">{{ stock.rs }}</td>
+        <td class="px-4 py-2" data-key="days_present">{{ stock.persistence.split()[0] }}</td>
         <td class="px-4 py-2">{{ stock.tag }}</td>
       </tr>
       {% endfor %}
@@ -50,12 +56,24 @@
     </p>
   {% endif %}
 {% endif %}
-
+<!-- 
 <script>
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
     alert(`Copied: ${text}`);
   });
 }
-</script>
+
+function sortTable(key) {
+  const rows = Array.from(document.querySelectorAll("tbody tr"));
+  rows.sort((a, b) => {
+    const valA = parseFloat(a.querySelector(`[data-key="${key}"]`).textContent) || 0;
+    const valB = parseFloat(b.querySelector(`[data-key="${key}"]`).textContent) || 0;
+    return valB - valA; // descending
+  });
+  const tbody = document.querySelector("tbody");
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
+}
+</script> -->
 {% endblock %}

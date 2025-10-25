@@ -74,6 +74,7 @@ def top_performers():
     overlap_n200_n500 = n200_set & n500_set
     overlap_bse_n500 = bse_set & n500_set
     overlap_all = n200_set & bse_set & n500_set
+    last_processed_time = datetime.now()
 
     return render_template("top_performers.html",
                            nifty_200=nifty_200,
@@ -82,7 +83,8 @@ def top_performers():
                            overlap_n200_bse=overlap_n200_bse,
                            overlap_n200_n500=overlap_n200_n500,
                            overlap_bse_n500=overlap_bse_n500,
-                           overlap_all=overlap_all)
+                           overlap_all=overlap_all,
+                           last_processed_time=last_processed_time)
 
 @performers_bp.route("/upload-csv", methods=["POST"])
 def upload_csv():

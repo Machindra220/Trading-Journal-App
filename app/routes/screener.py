@@ -87,19 +87,35 @@ def screen_stage2(symbols):
 
 # 💾 Save to DB
 def save_screened_stocks(df):
-    today = date.today()
+    now = datetime.now()
+    updated, inserted = 0, 0
+
     for _, row in df.iterrows():
-        stock = Stage2Stock(
-            symbol=row["symbol"],
-            date=today,
-            price=row["price"],
-            ma_30w=row["30w_ma"],
-            volume=row["volume"],
-            vol_avg=row["vol_avg"],
-            rs=row["rs"]
-        )
-        db.session.add(stock)
+        existing = Stage2Stock.query.filter_by(symbol=row["symbol"], date=now.date()).first()
+
+        if existing:
+            existing.price = row["price"]
+            existing.ma_30w = row["30w_ma"]
+            existing.volume = row["volume"]
+            existing.vol_avg = row["vol_avg"]
+            existing.rs = row["rs"]
+            updated += 1
+        else:
+            stock = Stage2Stock(
+                symbol=row["symbol"],
+                date=now,  # full datetime
+                price=row["price"],
+                ma_30w=row["30w_ma"],
+                volume=row["volume"],
+                vol_avg=row["vol_avg"],
+                rs=row["rs"]
+            )
+            db.session.add(stock)
+            inserted += 1
+
     db.session.commit()
+    return updated, inserted
+
 
 # 🧹 Auto-delete old records
 def delete_old_stage2_records():
@@ -117,7 +133,7 @@ def get_persistent_stage2_stocks():
     ).filter(Stage2Stock.date >= cutoff).group_by(Stage2Stock.symbol).all()
     return {symbol: days for symbol, days in counts}
 
-# 🌐 Main screener route
+# 🌐 Main stage2 screener route
 @screener_bp.route("/stage2")
 def stage2_view():
     path = "data/MCAPge250cr.csv"
@@ -130,7 +146,6 @@ def stage2_view():
 
     results = screen_stage2(symbols)
     delete_old_stage2_records()
-    save_screened_stocks(results)
 
     presence_map = get_persistent_stage2_stocks()
     enriched = []
@@ -147,6 +162,9 @@ def stage2_view():
         enriched.append(stock)
 
     last_processed_time = datetime.now().strftime("%d %b %Y %I:%M %p")
+    updated, inserted = save_screened_stocks(results)
+    summary_message = f"✅ Updated {updated} stocks, added {inserted} new"
+
     return render_template("stage2.html", stocks=enriched,
                            last_processed_time=last_processed_time,
                            source_name=source_name)

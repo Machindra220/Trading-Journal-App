@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
+from sqlalchemy import DateTime
 
 
 class User(UserMixin, db.Model):
@@ -149,9 +150,11 @@ class Stage2Stock(db.Model):
     __tablename__ = 'stage2_stocks'
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(20), nullable=False)
-    date = db.Column(db.Date, nullable=False)
     price = db.Column(db.Float)
     ma_30w = db.Column(db.Float)
     volume = db.Column(db.BigInteger)
     vol_avg = db.Column(db.BigInteger)
     rs = db.Column(db.Float)
+    date = db.Column(db.DateTime, nullable=False)
+
+
