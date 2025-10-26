@@ -22,57 +22,57 @@ def dashboard():
     total_invested_open = 0
 
     for trade in trades:
-        if not trade.entries:
-            continue  # Skip trades with no entries
+        # ✅ Only include open trades with entries
+        if trade.status != "Open" or not trade.entries:
+            continue
 
-        # Safely calculate total invested and quantity
         total_invested = sum(float(e.invested_amount) for e in trade.entries)
         total_quantity = sum(e.quantity for e in trade.entries)
         exited_quantity = sum(x.quantity for x in trade.exits)
         remaining_quantity = total_quantity - exited_quantity
 
-        if total_quantity == 0:
-            continue  # Avoid division by zero
+        if total_quantity == 0 or remaining_quantity == 0:
+            continue  # Skip fully exited or zero-quantity trades
 
-        # Calculate metrics
         avg_entry_price = round(total_invested / total_quantity, 2)
         invested_remaining = round((remaining_quantity / total_quantity) * total_invested, 2)
         realized_pnl = sum((exit.price - avg_entry_price) * exit.quantity for exit in trade.exits)
-
-        # Realized profit from exited quantity
         realized_profit = sum((x.price - avg_entry_price) * x.quantity for x in trade.exits)
-        
 
-        # Get first entry details - %d/%m/%y | %d %b %Y
         first_entry = trade.entries[0]
         entry_date = first_entry.date.strftime('%d/%m/%y')
-        note = first_entry.note if first_entry.note else '—'
+        entry_notes = [e.note for e in trade.entries if e.note]
+        exit_notes = [x.note for x in trade.exits if x.note]
 
-        if trade.status == "Open":
-            trade_data.append({
-                'id': trade.id,
-                'stock_name': trade.stock_name,
-                'status': trade.status,
-                'total_invested': invested_remaining,
-                'quantity': remaining_quantity,
-                'exited_quantity': exited_quantity,
-                'realized_pnl': round(realized_pnl, 2),  # ✅ Add this
-                'realized_profit': round(realized_profit, 2),
-                'entry_date': entry_date,
-                'note': note,
-                'avg_entry_price': avg_entry_price
-            })
-            total_invested_open += invested_remaining
+        combined_notes = entry_notes + exit_notes
+        note = " | ".join(combined_notes) if combined_notes else "—"
 
-    # 🔍 Identify trades with no entries and no exits
-        incomplete_trades = Trade.query.filter_by(user_id=current_user.id, status='Open') \
-            .filter(~Trade.entries.any(), ~Trade.exits.any()).all()
+        
 
-        incomplete_trade_data = [
-            {'id': t.id, 'stock_name': t.stock_name.upper()}
-            for t in incomplete_trades
-        ]
+        trade_data.append({
+            'id': trade.id,
+            'stock_name': trade.stock_name,
+            'status': trade.status,
+            'total_invested': invested_remaining,
+            'quantity': remaining_quantity,
+            'exited_quantity': exited_quantity,
+            'realized_pnl': round(realized_pnl, 2),
+            'realized_profit': round(realized_profit, 2),
+            'entry_date': entry_date,
+            'note': note,
+            'avg_entry_price': avg_entry_price
+        })
 
+        total_invested_open += invested_remaining
+
+    # ✅ Identify incomplete trades (open but no entries or exits)
+    incomplete_trades = Trade.query.filter_by(user_id=current_user.id, status='Open') \
+        .filter(~Trade.entries.any(), ~Trade.exits.any()).all()
+
+    incomplete_trade_data = [
+        {'id': t.id, 'stock_name': t.stock_name.upper()}
+        for t in incomplete_trades
+    ]
 
     return render_template(
         'dashboard.html',
@@ -80,6 +80,7 @@ def dashboard():
         total_invested=total_invested_open,
         incomplete_trades=incomplete_trade_data
     )
+
 
 
 #Backend Route: add_trade
