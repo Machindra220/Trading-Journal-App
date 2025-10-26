@@ -30,12 +30,14 @@
       <thead class="bg-gray-300 text-gray-700">
         <tr>
           <th class="px-4 py-2 text-left">Stock</th>
-          <th class="px-4 py-2 text-left">Avg Price</th>
+          <th class="px-4 py-2 text-center">Avg Price<br><span class="text-xs font-normal">Entry Date</span></th>
+          <!-- <th class="px-4 py-2 text-center">Exit Price<br><span class="text-xs font-normal">Exit Date</span></th> -->
+          <!-- <th class="px-4 py-2 text-left">Avg Price</th> -->
           <th class="px-4 py-2 text-left">Qty</th>
           <th class="px-4 py-2 text-left">Exited Qty</th>
           <th class="px-4 py-2 text-left">Invested</th>
           <th class="px-4 py-2 text-left">Realized PnL</th>
-          <th class="px-4 py-2 text-left">Entry Date</th>
+          <!-- <th class="px-4 py-2 text-left">Entry Date</th> -->
           <th class="px-4 py-2 text-left">Note</th>
           <th class="px-4 py-2 text-left">Actions</th>
         </tr>
@@ -56,12 +58,20 @@
           </td>
 
           <!-- 💰 Trade Details -->
-          <td class="px-4 py-2">₹{{ trade.avg_entry_price }}</td>
+           <!-- Entry Column -->
+          <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 text-center">
+            ₹{{ trade.avg_entry_price }}
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ trade.entry_date }}
+            </div>
+          </td>
+
+          <!-- <td class="px-4 py-2">₹{{ trade.avg_entry_price }}</td> -->
           <td class="px-4 py-2">{{ trade.quantity }}</td>
           <td class="px-4 py-2">{{ trade.exited_quantity }}</td>
           <td class="px-4 py-2">₹{{ trade.total_invested }}</td>
           <td class="px-4 py-2">₹{{ trade.realized_pnl }}</td>
-          <td class="px-4 py-2">{{ trade.entry_date }}</td>
+          <!-- <td class="px-4 py-2">{{ trade.entry_date }}</td> -->
           <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{{ trade.note }}</td>
 
 

@@ -49,12 +49,14 @@
 
       {{ navlink('trades.dashboard', 'Dashboard', '🏠') }}
       {{ navlink('trades.add_trade', 'Add Trade', '➕') }}
+      {{ navlink('watchlist.add', 'Watchlist', '📈') }}
       {{ navlink('trades.trade_history', 'History', '📜') }}
       {{ navlink('resources.show_resources', 'Resources', '🧰') }}
       {{ navlink('risk.risk_calculator', 'Calculator', '🧮') }}
       {{ navlink('notes.notes_page', 'Notes', '📝') }}
       {{ navlink('stats.stats_dashboard', 'Stats', '📊') }}
       {{ navlink('calendar.calendar_view', 'Calendar', '📅') }}
+      
 
       <!-- Divider: Analysis -->
       <div class="border-t border-blue-700 my-2" x-show="sidebarOpen"></div>
@@ -67,7 +69,7 @@
 
       <!-- Divider: Watchlist -->
       <div class="border-t border-blue-700 my-2" x-show="sidebarOpen"></div>
-      {{ navlink('watchlist.add', 'Watchlist', '📈') }}
+      <!-- {{ navlink('watchlist.add', 'Watchlist', '📈') }} -->
 
       <!-- Logout -->
       <a href="{{ url_for('auth.logout') }}"
