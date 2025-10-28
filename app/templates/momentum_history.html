@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">📜 Momentum Strategy History</h2>
+
+<!-- Filters -->
+<form method="get" class="mb-4 flex gap-4 flex-wrap">
+  <input type="text" name="symbol" placeholder="Filter by symbol (e.g. INFY)"
+         value="{{ symbol_filter }}" class="px-3 py-2 border rounded w-48">
+  <input type="text" name="month" placeholder="Filter by month (YYYY-MM)"
+         value="{{ month_filter }}" class="px-3 py-2 border rounded w-48">
+  <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">🔍 Filter</button>
+</form>
+
+<!-- Trade Table -->
+<table class="w-full table-auto border-collapse">
+  <thead>
+    <tr class="bg-blue-100 dark:bg-blue-800">
+      <th class="px-4 py-2 text-left">Date</th>
+      <th class="px-4 py-2 text-left">Symbol</th>
+      <th class="px-4 py-2 text-left">Price</th>
+      <th class="px-4 py-2 text-left">Qty</th>
+      <th class="px-4 py-2 text-left">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for trade in trades %}
+    <tr class="border-b">
+      <td class="px-4 py-2">{{ trade.trade_date }}</td>
+      <td class="px-4 py-2">{{ trade.symbol.replace('.NS', '') }}</td>
+      <td class="px-4 py-2">₹{{ trade.price }}</td>
+      <td class="px-4 py-2">{{ trade.quantity }}</td>
+      <td class="px-4 py-2">{{ trade.notes }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="5" class="px-4 py-4 text-center text-gray-500">No trades found for selected filters.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

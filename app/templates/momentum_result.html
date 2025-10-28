@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">📊 Momentum Strategy Results</h2>
+<p>Run Date: {{ run_date }} | Scheduled Date: {{ first_monday }}</p>
+
+<!-- 🔴 Removal List -->
+<h3 class="text-xl text-red-600 mt-6 mb-2">Underperformers (To Remove)</h3>
+{% if removed %}
+<ul class="list-disc pl-6">
+  {% for stock in removed %}
+    <li>{{ stock.symbol }} — Bought at ₹{{ stock.buy_price }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-gray-600">✅ All current holdings are still in the top 20. No removals this cycle.</p>
+{% endif %}
+
+<!-- 🟢 Addition List -->
+<h3 class="text-xl text-green-600 mt-6 mb-2">New Additions (To Buy)</h3>
+{% if added %}
+<ul class="list-disc pl-6">
+  {% for stock in added %}
+    <li>{{ stock.symbol }} — Current Price ₹{{ stock.current_price }} | Rank {{ stock.rank }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-gray-600">✅ No new additions needed. Portfolio remains unchanged.</p>
+{% endif %}
+{% endblock %}

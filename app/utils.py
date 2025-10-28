@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from app.models import Trade
-# from app.extensions import db
+import yfinance as yf
 
 def get_pl_summary(user_id):
     today = date.today()
@@ -23,3 +23,14 @@ def get_pl_summary(user_id):
         'quarter': round(sum_pl(start_q), 2),
         'year': round(sum_pl(start_year), 2)
     }
+
+def get_current_price(symbol, suffix=".NS"):
+    try:
+        ticker = yf.Ticker(symbol + suffix)
+        data = ticker.history(period="1d", interval="1m")
+        if data.empty:
+            return None
+        return round(data["Close"].iloc[-1], 2)
+    except Exception as e:
+        print(f"Error fetching current price for {symbol}: {e}")
+        return None

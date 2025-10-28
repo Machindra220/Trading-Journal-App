@@ -34,7 +34,8 @@
         <td class="px-4 py-2">{{ loop.index }}</td>
         <td class="px-4 py-2">{{ stock.date.strftime('%d/%m/%Y %H:%M') }}</td>
         <td class="px-4 py-2 flex items-center gap-2">
-          <span>{{ stock.symbol }}</span>
+          <!-- <span>{{ stock.symbol }}</span> -->
+          <span>{{ stock.symbol_clean }}</span>
           <button onclick="copyToClipboard('{{ stock.symbol }}')" class="text-blue-600 hover:underline text-sm">📋 Copy</button>
         </td>
         <td class="px-4 py-2">{{ stock.price }}</td>

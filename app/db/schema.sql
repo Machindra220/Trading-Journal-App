@@ -106,3 +106,49 @@ CREATE TABLE stage2_stocks (
     vol_avg BIGINT,
     rs NUMERIC(10, 2)
 );
+
+--momentum_portfolio table 
+CREATE TABLE momentum_portfolio (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    buy_price NUMERIC(10, 2) NOT NULL,
+    buy_date DATE NOT NULL,
+    source_rank INT NOT NULL,
+    holding_status VARCHAR(10) DEFAULT 'active'
+);
+
+
+--momentum_trades table
+CREATE TABLE momentum_trades (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    action VARCHAR(4) CHECK (action IN ('BUY', 'SELL')),
+    price NUMERIC(10, 2) NOT NULL,
+    quantity INT NOT NULL,
+    trade_date DATE NOT NULL,
+    profit_loss_pct NUMERIC(6, 2),
+    notes TEXT
+);
+--delivery_surge_stock table
+CREATE TABLE delivery_surge_stock (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    date DATE NOT NULL,
+    price FLOAT,
+    volume BIGINT,
+    delivery_spike FLOAT,
+    roc_21d FLOAT,
+    rs_vs_index_21d FLOAT
+);
+
+CREATE TABLE stage2_delivery_stock (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    date DATE NOT NULL,
+    price FLOAT,
+    volume BIGINT,
+    delivery_spike FLOAT,
+    roc_21d FLOAT,
+    rs_vs_index_21d FLOAT
+);
+

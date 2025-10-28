@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Stage 2 Delivery Screener{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">🚀 Stage 2 Delivery Screener</h1>
+    <form method="get" class="mb-4 flex gap-4 flex-wrap">
+        <input type="text" name="symbol" placeholder="Filter by symbol" value="{{ symbol_filter }}"
+                class="px-3 py-2 border rounded w-48">
+        <select name="sort" class="px-3 py-2 border rounded">
+            <option value="delivery_spike" {% if sort_by == 'delivery_spike' %}selected{% endif %}>Delivery Spike</option>
+            <option value="volume" {% if sort_by == 'volume' %}selected{% endif %}>Volume</option>
+            <option value="roc" {% if sort_by == 'roc' %}selected{% endif %}>ROC (21D)</option>
+            <option value="rs" {% if sort_by == 'rs' %}selected{% endif %}>RS vs Index</option>
+        </select>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">🔍 Apply</button>
+        <a href="{{ url_for('stage2_delivery.stage2_delivery_screener') }}"
+            class="px-4 py-2 bg-gray-300 text-black rounded">🔄 Reset</a>
+    </form>
+
+  <div class="overflow-x-auto">
+    <table class="table-auto w-full border-collapse shadow-md rounded bg-white" id="sortable-table">
+      <thead class="bg-gray-200 text-sm">
+        <tr>
+          <th class="px-4 py-2">#</th>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Symbol</th>
+          <th class="px-4 py-2">Price</th>
+          <th class="px-4 py-2">Volume</th>
+          <th class="px-4 py-2">Delivery Spike</th>
+          <th class="px-4 py-2">ROC (21D)</th>
+          <th class="px-4 py-2">RS vs Index</th>
+          <th class="px-4 py-2">Tag</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in stocks %}
+        <tr class="border-t text-sm hover:bg-gray-50">
+          <td class="px-4 py-2">{{ loop.index }}</td>
+          <td class="px-4 py-2">{{ stock.date.strftime('%d-%b-%Y') }}</td>
+          <td class="px-4 py-2 flex items-center gap-2">
+            <span id="symbol-{{ loop.index }}">{{ stock.symbol_clean }}</span>
+            <button onclick="copyToClipboard('symbol-{{ loop.index }}')" class="text-blue-600 hover:underline text-xs">📋</button>
+          </td>
+          <td class="px-4 py-2">₹{{ "%.2f"|format(stock.price) }}</td>
+          <td class="px-4 py-2">{{ "{:,}".format(stock.volume) }}</td>
+          <td class="px-4 py-2">{{ stock.delivery_spike }}x</td>
+          <td class="px-4 py-2 {% if stock.roc_21d >= 10 %}text-green-600{% elif stock.roc_21d <= -5 %}text-red-500{% endif %}">
+            {{ stock.roc_21d }}%
+          </td>
+          <td class="px-4 py-2 {% if stock.rs_vs_index_21d >= 5 %}text-green-600{% elif stock.rs_vs_index_21d <= -5 %}text-red-500{% endif %}">
+            {{ stock.rs_vs_index_21d }}%
+          </td>
+          <td class="px-4 py-2">{{ stock.tag }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      alert(`Copied: ${el.textContent}`);
+    });
+  }
+}
+</script>
+{% endblock %}

@@ -4,10 +4,9 @@ import yfinance as yf
 import os
 from functools import lru_cache
 from datetime import datetime, timedelta
-# from app.utils.delivery_screener import filter_delivery_surge_stocks
-
-
-
+from sqlalchemy import and_
+from app.extensions import db
+from app.models import DeliverySurgeStock
 
 performers_bp = Blueprint("performers", __name__)
 
@@ -48,7 +47,8 @@ def get_top_performers(csv_file, top_n=12, suffix=".NS"):
                     "symbol": symbol,
                     "start_price": data["start_price"],
                     "end_price": data["end_price"],
-                    "return_pct": data["return_pct"]
+                    "return_pct": data["return_pct"],
+                    "current_price": data["end_price"]  # This is calling in momentum strategy
                 })
 
         top_df = pd.DataFrame(results).sort_values(by="return_pct", ascending=False).head(top_n)
@@ -68,7 +68,6 @@ def top_performers():
     n200_set = set([s["symbol"] for s in nifty_200])
     n500_set = set([s["symbol"] for s in nifty_500])
     bse_set = set([s["symbol"] for s in bse_200])
-    # overlaps = n200_set & n500_set & bse_set
     
     overlap_n200_bse = n200_set & bse_set
     overlap_n200_n500 = n200_set & n500_set
@@ -99,14 +98,12 @@ def upload_csv():
     return redirect(url_for("performers.top_performers"))
 
 # delivery_surge screener code
-# app/utils/delivery_screener.py
-
 def load_nifty500_tickers():
-    df = pd.read_csv("data/nifty_500.csv")
+    df = pd.read_csv("data/nifty_750.csv")
     df.columns = df.columns.str.strip().str.lower()
     return [s + ".NS" for s in df["symbol"].dropna().unique()]
 
-def analyze_stock(ticker):
+def analyze_stock(ticker, benchmark_hist=None):
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
@@ -114,32 +111,46 @@ def analyze_stock(ticker):
         if market_cap < 100 * 10**7:
             return None
 
-        hist = stock.history(period="15d")
-        if hist.empty or len(hist) < 5:
+        hist = stock.history(period="30d")
+        if hist.empty or len(hist) < 22:
             return None
 
         latest = hist.iloc[-1]
         avg_volume = hist["Volume"][:-1].mean()
         delivery_spike = latest["Volume"] / avg_volume
 
+        roc = ((latest["Close"] - hist["Close"].iloc[-22]) / hist["Close"].iloc[-22]) * 100
+
+        # ✅ Use cached benchmark history
+        if benchmark_hist is None or benchmark_hist.empty or len(benchmark_hist) < 22:
+            return None
+        benchmark_roc = ((benchmark_hist["Close"].iloc[-1] - benchmark_hist["Close"].iloc[-22]) / benchmark_hist["Close"].iloc[-22]) * 100
+        rs_vs_index = roc - benchmark_roc
+
         return {
             "ticker": ticker,
-            "current_price": latest["Close"],
-            "price_change": latest["Close"] - latest["Open"],
-            "price_change_pct": round((latest["Close"] - latest["Open"]) / latest["Open"] * 100, 2),
+            "current_price": float(latest["Close"]),
+            "price_change": float(latest["Close"] - latest["Open"]),
+            "price_change_pct": round(float((latest["Close"] - latest["Open"]) / latest["Open"]) * 100, 2),
             "volume": int(latest["Volume"]),
-            "delivery_spike": round(delivery_spike, 2),
-            "market_cap": market_cap
+            "delivery_spike": round(float(delivery_spike), 2),
+            "market_cap": int(market_cap),
+            "roc_21d": round(float(roc), 2),
+            "rs_vs_index_21d": round(float(rs_vs_index), 2)
         }
+
     except Exception as e:
         print(f"Error analyzing {ticker}: {e}")
         return None
 
-def filter_delivery_surge_stocks():
+def filter_delivery_surge_stocks(save_to_db=True):
     tickers = load_nifty500_tickers()
+    benchmark_hist = yf.Ticker("^NSEI").history(period="30d")
+    today = datetime.today().date()
     results = []
+
     for ticker in tickers:
-        data = analyze_stock(ticker)
+        data = analyze_stock(ticker, benchmark_hist=benchmark_hist)
         if not data:
             continue
         if (
@@ -148,15 +159,107 @@ def filter_delivery_surge_stocks():
             data["delivery_spike"] >= 4
         ):
             results.append(data)
-    results.sort(key=lambda x: x["delivery_spike"], reverse=True)
+
+            if save_to_db:
+                existing = DeliverySurgeStock.query.filter(
+                    and_(
+                        DeliverySurgeStock.symbol == ticker,
+                        DeliverySurgeStock.date == today
+                    )
+                ).first()
+
+                if existing:
+                    # ✅ Suggestion 2: Simplified update logic
+                    fields = {
+                        "price": data["current_price"],
+                        "volume": data["volume"],
+                        "delivery_spike": data["delivery_spike"],
+                        "roc_21d": data["roc_21d"],
+                        "rs_vs_index_21d": data["rs_vs_index_21d"]
+                    }
+                    updated = False
+                    for field, new_val in fields.items():
+                        if getattr(existing, field) != new_val:
+                            setattr(existing, field, new_val)
+                            updated = True
+                    if updated:
+                        db.session.add(existing)
+                else:
+                    db.session.add(DeliverySurgeStock(
+                        symbol=ticker,
+                        date=today,
+                        price=data["current_price"],
+                        volume=data["volume"],
+                        delivery_spike=data["delivery_spike"],
+                        roc_21d=data["roc_21d"],
+                        rs_vs_index_21d=data["rs_vs_index_21d"]
+                    ))
+
+    if save_to_db:
+        db.session.commit()
+
     return results
 
-# app/routes/performers.py
 
+# app/routes/performers.py
 delivery_bp = Blueprint("delivery", __name__)
 
 @delivery_bp.route("/delivery-surge")
 def delivery_surge():
-    stocks = filter_delivery_surge_stocks()
+    sort_by = request.args.get("sort", "delivery_spike")
+    stocks = filter_delivery_surge_stocks(save_to_db=True)
+
+    if sort_by == "roc":
+        stocks.sort(key=lambda x: x["roc_21d"], reverse=True)
+    elif sort_by == "rs":
+        stocks.sort(key=lambda x: x["rs_vs_index_21d"], reverse=True)
+    else:
+        stocks.sort(key=lambda x: x["delivery_spike"], reverse=True)
+
     last_processed_time = datetime.now()
-    return render_template("delivery_surge.html", stocks=stocks, last_processed_time=last_processed_time)
+    return render_template("delivery_surge.html", stocks=stocks,
+                           last_processed_time=last_processed_time,
+                           sort_by=sort_by)
+
+# Delivery Surge History Route
+@delivery_bp.route("/delivery/history")
+def delivery_history():
+    cutoff = datetime.today().date() - timedelta(days=30)
+    symbol_filter = request.args.get("symbol", "").upper().strip()
+
+    query = DeliverySurgeStock.query.filter(DeliverySurgeStock.date >= cutoff)
+    if symbol_filter:
+        query = query.filter(DeliverySurgeStock.symbol.ilike(f"%{symbol_filter}%"))
+
+    stocks = query.order_by(DeliverySurgeStock.date.desc()).all()
+
+    counts = db.session.query(
+        DeliverySurgeStock.symbol,
+        db.func.count(DeliverySurgeStock.date).label("days_present")
+    ).filter(DeliverySurgeStock.date >= cutoff).group_by(DeliverySurgeStock.symbol).all()
+
+    presence_map = {symbol: days for symbol, days in counts}
+
+    enriched = []
+    for stock in stocks:
+        days = presence_map.get(stock.symbol, 0)
+        tag = (
+            "🔥 30D" if days >= 30 else
+            "📆 15D" if days >= 15 else
+            "🕒 7D" if days >= 7 else
+            "⏳ 3D" if days >= 3 else ""
+        )
+        enriched.append({
+            "date": stock.date,
+            "symbol": stock.symbol,
+            "symbol_clean": stock.symbol.replace(".NS", ""),
+            "price": stock.price,
+            "volume": stock.volume,
+            "delivery_spike": stock.delivery_spike,
+            "roc_21d": stock.roc_21d,
+            "rs_vs_index_21d": stock.rs_vs_index_21d,
+            "days_present": days,
+            "tag": tag
+        })
+
+    return render_template("delivery_history.html", stocks=enriched, symbol_filter=symbol_filter)
