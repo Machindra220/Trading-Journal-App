@@ -11,17 +11,32 @@ def risk_calculator():
             sl_price = float(request.form['sl_price'])
 
             risk_per_share = current_price - sl_price
+            risk_pct_of_price = round((risk_per_share / current_price) * 100, 2) if current_price > 0 else 0
+
 
             def calc_qty(risk_pct):
+                max_affordable_qty = int(investment / current_price)
                 risk_amount = investment * risk_pct
-                quantity = int(risk_amount / risk_per_share) if risk_per_share > 0 else 0
-                return {'risk_pct': risk_pct * 100, 'risk_amount': risk_amount, 'quantity': quantity}
+                risk_per_share = current_price - sl_price
+
+                # How many shares can you buy without exceeding risk amount AND investment
+                max_risk_qty = int(risk_amount / risk_per_share) if risk_per_share > 0 else 0
+                quantity = min(max_affordable_qty, max_risk_qty)
+
+                return {
+                    'risk_pct': risk_pct * 100,
+                    'risk_amount': round(risk_amount, 2),
+                    'quantity': quantity,
+                    'max_affordable_qty': max_affordable_qty
+                }
+
 
             result = {
                 'investment': investment,
                 'current_price': current_price,
                 'sl_price': sl_price,
                 'risk_per_share': risk_per_share,
+                'risk_pct_of_price': risk_pct_of_price,
                 'levels': [
                     calc_qty(0.05),
                     calc_qty(0.04),

@@ -78,10 +78,12 @@
       <thead class="bg-gray-300 text-gray-800">
         <tr>
           <th class="px-4 py-2">Stock Name</th>
-          <th class="px-4 py-2">Entry</th>
+          <!-- <th class="px-4 py-2">Entry</th>
           <th class="px-4 py-2">Exit</th>
           <th class="px-4 py-2">Entry (Avg)</th>
-          <th class="px-4 py-2">Exit (Avg)</th>
+          <th class="px-4 py-2">Exit (Avg)</th> -->
+          <th class="px-4 py-2 text-center">Entry Price<br><span class="text-xs font-normal">Entry Date</span></th>
+          <th class="px-4 py-2 text-center">Exit Price<br><span class="text-xs font-normal">Exit Date</span></th>
           <th class="px-4 py-2">Qty</th>
           <th class="px-4 py-2">Inv. Amount</th>
           <th class="px-4 py-2">Duration</th>
@@ -94,10 +96,24 @@
         {% for t in trades %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-2">{{ t.stock_name }}</td>
-          <td class="px-4 py-2">{{ t.entry_date.strftime('%d/%m/%y') if t.entry_date else '—' }}</td>
-          <td class="px-4 py-2">{{ t.exit_date.strftime('%d/%m/%y') if t.exit_date else '—' }}</td>
-          <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_entry_price) }}</td>
-          <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_exit_price) }}</td>
+          <!-- Entry Column -->
+          <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 text-center">
+            ₹{{ "%.2f"|format(t.avg_entry_price) }}
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ t.entry_date.strftime('%d/%m/%y') if t.entry_date else '—' }}
+            </div>
+          </td>
+          <!-- Exit Column -->
+          <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 text-center">
+            ₹{{ "%.2f"|format(t.avg_exit_price) }}
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ t.exit_date.strftime('%d/%m/%y') if t.exit_date else '—' }}
+            </div>
+          </td>
+          <!-- <td class="px-4 py-2">{{ t.entry_date.strftime('%d/%m/%y') if t.entry_date else '—' }}</td> -->
+          <!-- <td class="px-4 py-2">{{ t.exit_date.strftime('%d/%m/%y') if t.exit_date else '—' }}</td> -->
+          <!-- <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_entry_price) }}</td> -->
+          <!-- <td class="px-4 py-2">₹{{ "%.2f"|format(t.avg_exit_price) }}</td> -->
           <td class="px-4 py-2">{{ t.total_quantity }}</td>
           <td class="px-4 py-2 {% if t.total_invested > 100000 %}text-blue-700 font-semibold{% endif %}">
             ₹{{ "%.2f"|format(t.total_invested) }}

@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0 — 28-Sep-2025
+## v1.0 — 28-09-2025
 - Initial public release
 - Trade dashboard with P&L tracking
 - Excel export with filters
@@ -71,3 +71,28 @@
 - Stage 2 stocks saved to database from last 30 days
 - Sectorwise stage 2 stocks screener
 - Collapsible vertical sidebar navigation menu
+
+## [v1.6.0] - 2025-10-28
+### Added
+🚀 New Features
+*Stage 2 Delivery Screener
+Screens stocks from latest Stage 2 saved entries (deduplicated by symbol)
+Filters stocks with delivery spike ≥ 3x
+Calculates and displays: Date, Symbol, Price, Volume, Delivery Spike, ROC (21D), RS vs Index, and Tag
+Tags: 🔥 Strong (≥6x), ⚡ Moderate (≥4x), 📈 Mild (≥3x)
+*Persistence Layer
+Created new table stage2_delivery_stock to store daily screener results
+Saves one record per stock per day, updates if values change
+Automatically retains only last 30 days of data
+*Stage 2 Delivery History Page
+Lists all saved records from the past 30 days
+Includes persistence tags: 🔥 30D, 📆 15D, 🕒 7D, ⏳ 3D
+Supports symbol filtering
+
+🔍 Enhancements
+Sorting & Filtering
+Added multi-field sorting to screener: Volume, Delivery Spike, ROC (21D), RS vs Index
+Added symbol filter and reset sorting option
+UI Improvements
+Added tooltips to all sidebar links (matching page names)
+Added copy-to-clipboard button for stock symbols in all tables

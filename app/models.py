@@ -157,4 +157,52 @@ class Stage2Stock(db.Model):
     rs = db.Column(db.Float)
     date = db.Column(db.DateTime, nullable=False)
 
+# models Momentum
 
+class MomentumPortfolio(db.Model):
+    __tablename__ = 'momentum_portfolio'
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    buy_price = db.Column(db.Numeric(10, 2), nullable=False)
+    buy_date = db.Column(db.Date, nullable=False)
+    source_rank = db.Column(db.Integer, nullable=False)
+    holding_status = db.Column(db.String(10), default='active')  # 'active' or 'removed'
+# models Momentum Trades
+class MomentumTrade(db.Model):
+    __tablename__ = 'momentum_trades'
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    action = db.Column(db.String(4), nullable=False)  # BUY or SELL
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    trade_date = db.Column(db.Date, nullable=False)
+    profit_loss_pct = db.Column(db.Numeric(6, 2))  # only for SELL
+    notes = db.Column(db.Text)
+
+# models Delivery Surge Stock
+class DeliverySurgeStock(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    price = db.Column(db.Float)
+    volume = db.Column(db.BigInteger)
+    delivery_spike = db.Column(db.Float)
+    roc_21d = db.Column(db.Float)
+    rs_vs_index_21d = db.Column(db.Float)
+
+    def __repr__(self):
+        return f"<DeliverySurgeStock {self.symbol} @ {self.date}>"
+
+#Stage2DeliveryStock modal
+class Stage2DeliveryStock(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    price = db.Column(db.Float)
+    volume = db.Column(db.BigInteger)
+    delivery_spike = db.Column(db.Float)
+    roc_21d = db.Column(db.Float)
+    rs_vs_index_21d = db.Column(db.Float)
+
+    def __repr__(self):
+        return f"<Stage2DeliveryStock {self.symbol} @ {self.date}>"

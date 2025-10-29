@@ -193,6 +193,7 @@ def stage2_saved():
         enriched.append({
             "date": stock.date,
             "symbol": stock.symbol,
+            "symbol_clean": stock.symbol.replace(".NS", ""),
             "price": stock.price,
             "ma_30w": stock.ma_30w,
             "volume": stock.volume,

@@ -59,28 +59,37 @@
         <li>Investment: ₹{{ result.investment }}</li>
         <li>Current Price: ₹{{ result.current_price }}</li>
         <li>Stop Loss Price: ₹{{ result.sl_price }}</li>
-        <li>Risk per Share: ₹{{ result.risk_per_share }}</li>
+        <li>Risk per Share: ₹{{ result.risk_per_share }} 
+          <span class="text-sm text-gray-500">
+            ({{ result.risk_pct_of_price }}% of Stock Current Price)
+          </span>
+        </li>
+
       </ul>
 
       <!-- 📐 Risk Table -->
       <div class="overflow-x-auto">
         <table class="min-w-full border border-gray-300 rounded shadow-sm text-sm">
-          <thead class="bg-gray-100 text-gray-700">
-            <tr>
-              <th class="px-4 py-2 text-left">Risk %</th>
-              <th class="px-4 py-2 text-left">Risk Amount</th>
-              <th class="px-4 py-2 text-left">Quantity to Buy</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200">
-            {% for level in result.levels %}
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-2">{{ level.risk_pct }}%</td>
-              <td class="px-4 py-2">₹{{ level.risk_amount | round(2) }}</td>
-              <td class="px-4 py-2">{{ level.quantity }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
+        <thead class="bg-gray-100 text-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left">Risk %</th>
+            <th class="px-4 py-2 text-left">Risk Amount</th>
+            <th class="px-4 py-2 text-left">Qty (Risk-Based)</th>
+            <th class="px-4 py-2 text-left">Max Affordable Qty</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-200">
+          {% for level in result.levels %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2">{{ level.risk_pct }}%</td>
+            <td class="px-4 py-2">₹{{ level.risk_amount | round(2) }}</td>
+            <td class="px-4 py-2">{{ level.quantity }}</td>
+            <td class="px-4 py-2">{{ level.max_affordable_qty }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
         </table>
       </div>
     {% endif %}
