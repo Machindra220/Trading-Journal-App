@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from config import Config
-from flask_login import current_user
+from flask_login import current_user, login_required
 from dotenv import load_dotenv
 from app.extensions import db, login_manager, csrf, cache, mail  # ✅ Include mail
 from app.models import Resource
@@ -55,6 +55,7 @@ def create_app():
 
     # Home route
     @app.route('/')
+    @login_required
     def home():
         return render_template('home.html')
 

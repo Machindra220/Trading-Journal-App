@@ -14,3 +14,4 @@ docker-compose.yml
 generate_schema.py
 history_commands.txt
 static/uploads/
+.txt 

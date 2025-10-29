@@ -1,0 +1,7 @@
+Numpy Version = numpy 
+Create a .env file in your project root
+OR Set the Environment Variable - Run this in your terminal before starting Flask:
+    - export MAIL_PORT=587
+OR - Add a Default Fallback in config.py(We're not doing this cause we've .env file) - MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+
+
