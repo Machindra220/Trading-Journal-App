@@ -62,6 +62,9 @@ def stage2_delivery_screener():
     benchmark_hist = yf.Ticker("^NSEI").history(period="30d")
 
     results = []
+    inserted_count = 0
+    updated_count = 0
+
     for entry in entries:
         symbol = entry.symbol
         if symbol_filter and symbol_filter not in symbol:
@@ -100,6 +103,7 @@ def stage2_delivery_screener():
                         updated = True
                 if updated:
                     db.session.add(existing)
+                    updated_count += 1
             else:
                 db.session.add(Stage2DeliveryStock(
                     symbol=symbol,
@@ -110,6 +114,7 @@ def stage2_delivery_screener():
                     roc_21d=data["roc_21d"],
                     rs_vs_index_21d=data["rs_vs_index_21d"]
                 ))
+                inserted_count += 1
 
     db.session.commit()
 
@@ -123,8 +128,14 @@ def stage2_delivery_screener():
     else:
         results.sort(key=lambda x: x["delivery_spike"], reverse=True)
 
-    return render_template("stage2_delivery_screener.html", stocks=results,
-                           sort_by=sort_by, symbol_filter=symbol_filter)
+    summary_message = f"✅ Updated {updated_count} stocks, inserted {inserted_count} new"
+
+    return render_template("stage2_delivery_screener.html",
+                           stocks=results,
+                           sort_by=sort_by,
+                           symbol_filter=symbol_filter,
+                           summary_message=summary_message)
+    
 
 @stage2_delivery_bp.route("/stage2-delivery-history")
 def stage2_delivery_history():
