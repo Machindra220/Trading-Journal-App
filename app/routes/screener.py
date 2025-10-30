@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template,request
 import pandas as pd
 import yfinance as yf
 from datetime import date, datetime, timedelta
@@ -167,20 +167,33 @@ def stage2_view():
 
     return render_template("stage2.html", stocks=enriched,
                            last_processed_time=last_processed_time,
-                           source_name=source_name)
+                           source_name=source_name, 
+                           summary_message=summary_message)
 
 # 📦 Saved stocks view
 @screener_bp.route("/stage2/saved")
 def stage2_saved():
     cutoff = date.today() - timedelta(days=30)
-    stocks = Stage2Stock.query.filter(Stage2Stock.date >= cutoff).order_by(Stage2Stock.date.desc()).all()
+    symbol_filter = request.args.get("symbol", "").strip().upper()
 
+    # Base query
+    query = Stage2Stock.query.filter(Stage2Stock.date >= cutoff)
+
+    # Apply filter if present
+    if symbol_filter:
+        query = query.filter(Stage2Stock.symbol.ilike(f"%{symbol_filter}%"))
+
+    # Fetch filtered stocks
+    stocks = query.order_by(Stage2Stock.date.desc()).all()
+
+    # Count persistence
     counts = db.session.query(
         Stage2Stock.symbol,
         func.count(Stage2Stock.date).label("days_present")
     ).filter(Stage2Stock.date >= cutoff).group_by(Stage2Stock.symbol).all()
     presence_map = {symbol: days for symbol, days in counts}
 
+    # Enrich for display
     enriched = []
     for stock in stocks:
         days = presence_map.get(stock.symbol, 0)
@@ -203,7 +216,9 @@ def stage2_saved():
             "tag": tag
         })
 
-    return render_template("stage2_saved.html", stocks=enriched)
+    return render_template("stage2_saved.html",
+                           stocks=enriched,
+                           symbol_filter=symbol_filter)
 
 # 📊 Sector analysis route
 @screener_bp.route("/sector-analysis")
