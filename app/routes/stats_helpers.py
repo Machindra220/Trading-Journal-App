@@ -25,7 +25,7 @@ def get_equity_curve(trades):
         curve.append({'date': t.exit_date.strftime('%d-%m-%Y'), 'value': equity})
     return curve, max_drawdown
 
-def get_stock_stats(trades):
+def get_stock_stats(trades, limit=20):
     stats = {}
     for t in trades:
         pnl = calculate_realized_pnl(t)
@@ -34,4 +34,11 @@ def get_stock_stats(trades):
             stats[stock] = {'count': 0, 'pnl': 0}
         stats[stock]['count'] += 1
         stats[stock]['pnl'] += pnl
-    return stats
+
+    # Sort by trade count (most traded)
+    most_traded = dict(sorted(stats.items(), key=lambda x: x[1]['count'], reverse=True)[:limit])
+
+    # Sort by total P&L (most profitable)
+    most_profitable = dict(sorted(stats.items(), key=lambda x: x[1]['pnl'], reverse=True)[:limit])
+
+    return most_traded, most_profitable

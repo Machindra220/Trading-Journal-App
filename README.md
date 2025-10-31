@@ -11,11 +11,16 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 - 🖥️ Compact UI with icon-only actions
 - 🕒 Last accessed tracking for resources
 - 🕒 Watchlist page
+- 🕒 Open Trades
 - 🕒 Trades history Page
 - 🕒 Notes page 
 - 🕒 Simple statistics for our trading performance tracking
 - 🖥️ Enhanced trade history view with action buttons (v1.1)
 - 🧮 Risk calculator according our investment value
+- 📊 Screeners - Sector Analysis, Delivery Surge, Stage2 Delivery Surge
+- 📦 Last 30 days history of Screeners Data
+- 📈 Top 20 Performers from Nifty 200, Bse 200 and Nifty 500
+- 📊 Momentum Strategy and its recrods according to 1 Month Rebalancing
 
 ## 🚀 Getting Started Steps
 

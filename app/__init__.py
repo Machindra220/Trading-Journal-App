@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from config import Config
 from flask_login import current_user, login_required
 from dotenv import load_dotenv
+from flask_wtf.csrf import CSRFProtect, generate_csrf  # ✅ Add this line
 from app.extensions import db, login_manager, csrf, cache, mail  # ✅ Include mail
 from app.models import Resource
 
@@ -34,9 +35,6 @@ def create_app():
     from app.routes.momentum_strategy import momentum_bp
     from app.routes.stage2_delivery import stage2_delivery_bp
 
-
-    
-
     app.register_blueprint(stage2_delivery_bp)
     app.register_blueprint(momentum_bp)
     app.register_blueprint(screener_bp, url_prefix="/screener")
@@ -51,7 +49,6 @@ def create_app():
     app.register_blueprint(watchlist_bp)
     app.register_blueprint(performers_bp, url_prefix="/performers")
     app.register_blueprint(delivery_bp, url_prefix="/delivery")
-
 
     # Home route
     @app.route('/')
@@ -68,6 +65,11 @@ def create_app():
             pinned = Resource.query.filter_by(user_id=current_user.id, pinned=True).order_by(Resource.title).all()
             return dict(pinned_resources=pinned)
         return dict(pinned_resources=[])
+
+    # ✅ Inject CSRF token globally for manual forms
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf())
 
     return app
 #app = create_app()

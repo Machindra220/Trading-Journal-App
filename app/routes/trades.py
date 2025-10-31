@@ -1,18 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
 from app.models import Trade, TradeEntry, TradeExit
-# from app import db
 from app.extensions import db
 from datetime import date, datetime, timedelta
 import pandas as pd
 from io import BytesIO
-
-
-
+from flask_wtf.csrf import validate_csrf, CSRFError  # ✅ CSRF validation
 
 trades_bp = Blueprint('trades', __name__)
 
-#Dashboard Route
+# Dashboard Route
 @trades_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -22,7 +19,6 @@ def dashboard():
     total_invested_open = 0
 
     for trade in trades:
-        # ✅ Only include open trades with entries
         if trade.status != "Open" or not trade.entries:
             continue
 
@@ -30,9 +26,10 @@ def dashboard():
         total_quantity = sum(e.quantity for e in trade.entries)
         exited_quantity = sum(x.quantity for x in trade.exits)
         remaining_quantity = total_quantity - exited_quantity
+        open_trade_count = len(trade_data)
 
         if total_quantity == 0 or remaining_quantity == 0:
-            continue  # Skip fully exited or zero-quantity trades
+            continue
 
         avg_entry_price = round(total_invested / total_quantity, 2)
         invested_remaining = round((remaining_quantity / total_quantity) * total_invested, 2)
@@ -43,11 +40,8 @@ def dashboard():
         entry_date = first_entry.date.strftime('%d/%m/%y')
         entry_notes = [e.note for e in trade.entries if e.note]
         exit_notes = [x.note for x in trade.exits if x.note]
-
         combined_notes = entry_notes + exit_notes
         note = " | ".join(combined_notes) if combined_notes else "—"
-
-        
 
         trade_data.append({
             'id': trade.id,
@@ -65,7 +59,6 @@ def dashboard():
 
         total_invested_open += invested_remaining
 
-    # ✅ Identify incomplete trades (open but no entries or exits)
     incomplete_trades = Trade.query.filter_by(user_id=current_user.id, status='Open') \
         .filter(~Trade.entries.any(), ~Trade.exits.any()).all()
 
@@ -78,16 +71,21 @@ def dashboard():
         'dashboard.html',
         trades=trade_data,
         total_invested=total_invested_open,
-        incomplete_trades=incomplete_trade_data
+        incomplete_trades=incomplete_trade_data,
+        open_trade_count=open_trade_count
     )
 
-
-
-#Backend Route: add_trade
+# Add Trade
 @trades_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_trade():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
+            return redirect(url_for('trades.add_trade'))
+
         stock_name = request.form.get('stock_name', '').strip().upper()
         entry_note = request.form.get('entry_note', '').strip()
 
@@ -108,9 +106,7 @@ def add_trade():
 
     return render_template('add_trade.html')
 
-
-
-# View Trades Route
+# View Trade
 @trades_bp.route('/trade/<int:trade_id>')
 @login_required
 def view_trade(trade_id):
@@ -131,7 +127,6 @@ def view_trade(trade_id):
     status = "Closed" if total_buy_qty == total_sell_qty else "Open"
     pnl = total_exited - total_invested if status == "Closed" else None
 
-    # Duration logic
     if entries:
         start_date = entries[0].date
         end_date = exits[-1].date if status == "Closed" and exits else date.today()
@@ -147,11 +142,10 @@ def view_trade(trade_id):
         status=status,
         pnl=round(pnl, 2) if pnl is not None else None,
         duration_days=duration_days,
-        current_date = date.today().isoformat()  # 'YYYY-MM-DD' format
+        current_date=date.today().isoformat()
     )
 
-
-# add_entry – Log a Buy
+# Add Entry
 @trades_bp.route('/trade/<int:trade_id>/entry', methods=['POST'])
 @login_required
 def add_entry(trade_id):
@@ -162,27 +156,25 @@ def add_entry(trade_id):
         return redirect(url_for('trades.dashboard'))
 
     try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+
         quantity = int(request.form['quantity'])
         price = float(request.form['price'])
         date_str = request.form['date']
         date_obj = date.fromisoformat(date_str)
         note = request.form.get('note', '').strip()
 
-        # ✅ Check current trade state
         total_buy_qty = sum(e.quantity for e in trade.entries)
         total_sell_qty = sum(x.quantity for x in trade.exits)
 
-        # ❌ Prevent buy if trade is already closed
         if total_buy_qty == total_sell_qty and total_buy_qty > 0:
             flash("Trade is closed. Start a new trade to buy again.", "error")
             return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-        # ❌ Prevent buy if sell quantity already exceeds buy quantity
         if total_sell_qty > total_buy_qty:
             flash("Sell quantity exceeds buy quantity. Trade is invalid.", "error")
             return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-        # ✅ Proceed with entry
         entry = TradeEntry(
             quantity=quantity,
             price=price,
@@ -192,22 +184,21 @@ def add_entry(trade_id):
         )
         db.session.add(entry)
 
-        # ✅ Set entry_date if not already set
         if not trade.entry_date:
             trade.entry_date = date_obj
 
         db.session.commit()
         flash("Buy entry added successfully.", "success")
 
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Error adding buy entry: {str(e)}", "error")
 
     return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-
-
-# add_exit – Log a Sell
+# Add Exit
 @trades_bp.route('/trade/<int:trade_id>/exit', methods=['POST'])
 @login_required
 def add_exit(trade_id):
@@ -218,23 +209,22 @@ def add_exit(trade_id):
         return redirect(url_for('trades.dashboard'))
 
     try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+
         quantity = int(request.form['quantity'])
         price = float(request.form['price'])
         date_str = request.form['date']
         date_obj = date.fromisoformat(date_str)
         note = request.form.get('note', '').strip()
 
-        # ✅ Calculate total buy and sell quantities
         total_buy_qty = sum(e.quantity for e in trade.entries)
         total_sell_qty = sum(x.quantity for x in trade.exits)
         available_qty = total_buy_qty - total_sell_qty
 
-        # ✅ Validate sell quantity
         if quantity > available_qty:
             flash(f"Cannot sell {quantity} units. Only {available_qty} available.", "error")
             return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-        # ✅ Create exit
         exit = TradeExit(
             quantity=quantity,
             price=price,
@@ -244,7 +234,6 @@ def add_exit(trade_id):
         )
         db.session.add(exit)
 
-        # ✅ Include new exit in total sell quantity
         updated_sell_qty = total_sell_qty + quantity
 
         if updated_sell_qty == total_buy_qty and total_buy_qty > 0:
@@ -254,14 +243,15 @@ def add_exit(trade_id):
         db.session.commit()
         flash("Sell exit added successfully.", "success")
 
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Error adding sell exit: {str(e)}", "error")
 
     return redirect(url_for('trades.view_trade', trade_id=trade.id))
-
-
-#edit_entry(entry_id) — Edit Buy Entry
+                    
+# Edit Buy Entry
 @trades_bp.route('/entry/<int:entry_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_entry(entry_id):
@@ -274,6 +264,7 @@ def edit_entry(entry_id):
 
     if request.method == 'POST':
         try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
             quantity = int(request.form['quantity'])
             price = float(request.form['price'])
             date_str = request.form['date']
@@ -287,13 +278,15 @@ def edit_entry(entry_id):
             db.session.commit()
             flash("Buy entry updated successfully.", "success")
             return redirect(url_for('trades.view_trade', trade_id=trade.id))
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
         except Exception as e:
             db.session.rollback()
             flash(f"Error updating buy entry: {str(e)}", "error")
 
     return render_template('edit_entry.html', entry=entry, trade=trade)
 
-#delete_entry(entry_id) — Delete Buy Entry
+# Delete Buy Entry
 @trades_bp.route('/entry/<int:entry_id>/delete', methods=['POST'])
 @login_required
 def delete_entry(entry_id):
@@ -305,16 +298,19 @@ def delete_entry(entry_id):
         return redirect(url_for('trades.dashboard'))
 
     try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
         db.session.delete(entry)
         db.session.commit()
         flash("Buy entry deleted successfully.", "success")
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting buy entry: {str(e)}", "error")
 
     return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-#edit_exit(exit_id) — Edit Sell Exit
+# Edit Sell Exit
 @trades_bp.route('/exit/<int:exit_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_exit(exit_id):
@@ -327,13 +323,13 @@ def edit_exit(exit_id):
 
     if request.method == 'POST':
         try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
             quantity = int(request.form['quantity'])
             price = float(request.form['price'])
             date_str = request.form['date']
             note = request.form.get('note', '').strip()
             date_obj = date.fromisoformat(date_str)
 
-            # Validate against available quantity
             total_buy_qty = sum(e.quantity for e in trade.entries)
             other_exits_qty = sum(x.quantity for x in trade.exits if x.id != exit.id)
             available_qty = total_buy_qty - other_exits_qty
@@ -349,13 +345,15 @@ def edit_exit(exit_id):
             db.session.commit()
             flash("Sell exit updated successfully.", "success")
             return redirect(url_for('trades.view_trade', trade_id=trade.id))
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
         except Exception as e:
             db.session.rollback()
             flash(f"Error updating sell exit: {str(e)}", "error")
 
     return render_template('edit_exit.html', exit=exit, trade=trade)
 
-#delete_exit(exit_id) — Delete Sell Exit
+# Delete Sell Exit
 @trades_bp.route('/exit/<int:exit_id>/delete', methods=['POST'])
 @login_required
 def delete_exit(exit_id):
@@ -367,16 +365,19 @@ def delete_exit(exit_id):
         return redirect(url_for('trades.dashboard'))
 
     try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
         db.session.delete(exit)
         db.session.commit()
         flash("Sell exit deleted successfully.", "success")
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting sell exit: {str(e)}", "error")
 
     return redirect(url_for('trades.view_trade', trade_id=trade.id))
 
-#edit_trade Route
+# Edit Trade
 @trades_bp.route('/trade/<int:trade_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_trade(trade_id):
@@ -388,6 +389,7 @@ def edit_trade(trade_id):
 
     if request.method == 'POST':
         try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
             stock_name = request.form.get('stock_name', '').strip().upper()
             entry_date_str = request.form.get('entry_date')
             exit_date_str = request.form.get('exit_date')
@@ -402,13 +404,15 @@ def edit_trade(trade_id):
             flash("Trade updated successfully.", "success")
             return redirect(url_for('trades.dashboard'))
 
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
         except Exception as e:
             db.session.rollback()
             flash(f"Error updating trade: {str(e)}", "error")
 
     return render_template('edit_trade.html', trade=trade)
 
-#delete_trade Route
+# Delete Trade
 @trades_bp.route('/trade/<int:trade_id>/delete', methods=['POST'])
 @login_required
 def delete_trade(trade_id):
@@ -419,17 +423,19 @@ def delete_trade(trade_id):
         return redirect(url_for('trades.dashboard'))
 
     try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ CSRF check
         db.session.delete(trade)
         db.session.commit()
         flash("Trade deleted successfully.", "success")
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting trade: {str(e)}", "error")
 
     return redirect(request.referrer or url_for('trades.dashboard'))
 
-    # return redirect(url_for('trades.dashboard'))
-
+#=======
 #trade_history() Route
 @trades_bp.route('/history', methods=['GET'])
 @login_required

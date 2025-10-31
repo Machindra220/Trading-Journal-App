@@ -144,7 +144,7 @@
                 </button>
               </form>
               <form method="POST" action="{{ url_for('trades.delete_trade', trade_id=t['id']) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit"
                         onclick="return confirm('Delete this trade?')"
                         class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"

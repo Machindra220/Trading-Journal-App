@@ -6,8 +6,7 @@ from werkzeug.security import generate_password_hash
 import re
 from flask_mail import Message
 from flask import current_app
-
-
+from flask_wtf.csrf import validate_csrf, CSRFError  # ✅ Add CSRF validation
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -18,6 +17,12 @@ def load_user(user_id):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
+            return redirect(url_for('auth.register'))
+
         username = request.form.get('username').strip()
         email = request.form.get('email').strip().lower()
         password = request.form.get('password')
@@ -55,10 +60,15 @@ def register():
 
     return render_template('register.html')
 
-# Login Route
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
+            return redirect(url_for('auth.login'))
+
         username = request.form.get('username').strip()
         password = request.form.get('password')
 
@@ -71,15 +81,13 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             flash("Login successful. You are now log in.", "success")
-            return redirect(url_for('trades.dashboard'))  # placeholder route
+            return redirect(url_for('trades.dashboard'))
         else:
             flash("Invalid username or password.", "error")
             return redirect(url_for('auth.login'))
 
     return render_template('login.html')
 
-
-#logout Route
 @auth_bp.route('/logout')
 @login_required
 def logout():
@@ -87,24 +95,27 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for('auth.login'))
 
-#Reset Password Route
 @auth_bp.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
+            return redirect(url_for('auth.reset_request'))
+
         email = request.form.get('email').strip().lower()
         user = User.query.filter_by(email=email).first()
         if user:
             token = user.get_reset_token()
             reset_url = url_for('auth.reset_token', token=token, _external=True)
-            # TODO: send email with reset_url
-            print("Reset link:", reset_url)  # Replace with email logic
+            print("Reset link:", reset_url)
             flash("Password reset link sent to your email.", "success")
         else:
             flash("Email not found.", "error")
         return redirect(url_for('auth.login'))
     return render_template('reset_request.html')
 
-#Reset Password From
 @auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
     user = User.verify_reset_token(token)
@@ -113,6 +124,12 @@ def reset_token(token):
         return redirect(url_for('auth.reset_request'))
 
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        except CSRFError:
+            flash("Invalid or missing CSRF token.", "error")
+            return redirect(url_for('auth.reset_token', token=token))
+
         password = request.form.get('password')
         if len(password) < 6:
             flash("Password must be at least 6 characters.", "error")
@@ -123,7 +140,6 @@ def reset_token(token):
         return redirect(url_for('auth.login'))
 
     return render_template('reset_form.html')
-
 
 def send_reset_email(user):
     token = user.get_reset_token()
