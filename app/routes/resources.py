@@ -5,6 +5,7 @@ import pandas as pd
 from app.models import Resource
 from app.extensions import db  # ✅ Use extensions to avoid circular import
 from datetime import datetime
+from flask_wtf.csrf import validate_csrf, CSRFError  # ✅ CSRF imports
 
 resources_bp = Blueprint('resources', __name__)
 
@@ -21,24 +22,34 @@ def show_resources():
 @resources_bp.route('/add', methods=['POST'])
 @login_required
 def add_resource():
-    title = request.form.get('title', '').strip()
-    url = request.form.get('url', '').strip()
-    category = request.form.get('category')
-    new_category = request.form.get('new_category', '').strip()
-    note = request.form.get('note')
-    pinned = bool(request.form.get('pinned'))
+    try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
 
-    if not title or not url:
-        flash("Title and URL are required.", "error")
-        return redirect(url_for('resources.show_resources'))
+        title = request.form.get('title', '').strip()
+        url = request.form.get('url', '').strip()
+        category = request.form.get('category')
+        new_category = request.form.get('new_category', '').strip()
+        note = request.form.get('note')
+        pinned = bool(request.form.get('pinned'))
 
-    final_category = new_category if new_category else category
+        if not title or not url:
+            flash("Title and URL are required.", "error")
+            return redirect(url_for('resources.show_resources'))
 
-    new = Resource(title=title, url=url, note=note, category=final_category,
-                   pinned=pinned, user_id=current_user.id)
-    db.session.add(new)
-    db.session.commit()
-    flash("Resource added successfully!", "success")
+        final_category = new_category if new_category else category
+
+        new = Resource(title=title, url=url, note=note, category=final_category,
+                       pinned=pinned, user_id=current_user.id)
+        db.session.add(new)
+        db.session.commit()
+        flash("Resource added successfully!", "success")
+
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adding resource: {str(e)}", "error")
+
     return redirect(url_for('resources.show_resources'))
 
 # ✅ Edit Resource
@@ -48,13 +59,24 @@ def edit_resource(id):
     r = Resource.query.get_or_404(id)
     if r.user_id != current_user.id:
         abort(403)
-    r.title = request.form['title']
-    r.url = request.form['url']
-    r.note = request.form.get('note')
-    r.category = request.form.get('category')
-    r.pinned = bool(request.form.get('pinned'))
-    db.session.commit()
-    flash("Resource updated successfully!", "success")
+
+    try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+
+        r.title = request.form['title']
+        r.url = request.form['url']
+        r.note = request.form.get('note')
+        r.category = request.form.get('category')
+        r.pinned = bool(request.form.get('pinned'))
+        db.session.commit()
+        flash("Resource updated successfully!", "success")
+
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating resource: {str(e)}", "error")
+
     return redirect(url_for('resources.show_resources'))
 
 # ✅ Delete Resource
@@ -64,12 +86,22 @@ def delete_resource(id):
     r = Resource.query.get_or_404(id)
     if r.user_id != current_user.id:
         abort(403)
-    db.session.delete(r)
-    db.session.commit()
-    flash("Resource deleted.", "success")
+
+    try:
+        validate_csrf(request.form.get('csrf_token'))  # ✅ Validate CSRF
+        db.session.delete(r)
+        db.session.commit()
+        flash("Resource deleted.", "success")
+
+    except CSRFError:
+        flash("Invalid or missing CSRF token.", "error")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting resource: {str(e)}", "error")
+
     return redirect(url_for('resources.show_resources'))
 
-# ✅ Export Resources
+# ✅ Export Resources (GET only — no CSRF needed)
 @resources_bp.route('/export')
 @login_required
 def export_resources():
@@ -88,7 +120,7 @@ def export_resources():
     output.seek(0)
     return send_file(output, download_name='resources.xlsx', as_attachment=True)
 
-#last access time of resource
+# ✅ Last Access Time of Resource (GET only — no CSRF needed)
 @resources_bp.route('/resources/access/<int:id>')
 @login_required
 def access_resource(id):
