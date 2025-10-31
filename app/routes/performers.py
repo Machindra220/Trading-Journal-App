@@ -148,6 +148,8 @@ def filter_delivery_surge_stocks(save_to_db=True):
     benchmark_hist = yf.Ticker("^NSEI").history(period="30d")
     today = datetime.today().date()
     results = []
+    inserted = 0
+    updated = 0
 
     for ticker in tickers:
         data = analyze_stock(ticker, benchmark_hist=benchmark_hist)
@@ -169,7 +171,6 @@ def filter_delivery_surge_stocks(save_to_db=True):
                 ).first()
 
                 if existing:
-                    # ✅ Suggestion 2: Simplified update logic
                     fields = {
                         "price": data["current_price"],
                         "volume": data["volume"],
@@ -177,13 +178,14 @@ def filter_delivery_surge_stocks(save_to_db=True):
                         "roc_21d": data["roc_21d"],
                         "rs_vs_index_21d": data["rs_vs_index_21d"]
                     }
-                    updated = False
+                    changed = False
                     for field, new_val in fields.items():
                         if getattr(existing, field) != new_val:
                             setattr(existing, field, new_val)
-                            updated = True
-                    if updated:
+                            changed = True
+                    if changed:
                         db.session.add(existing)
+                        updated += 1
                 else:
                     db.session.add(DeliverySurgeStock(
                         symbol=ticker,
@@ -194,11 +196,13 @@ def filter_delivery_surge_stocks(save_to_db=True):
                         roc_21d=data["roc_21d"],
                         rs_vs_index_21d=data["rs_vs_index_21d"]
                     ))
+                    inserted += 1
 
     if save_to_db:
         db.session.commit()
 
-    return results
+    summary_message = f"✅ Updated {updated} stocks, added {inserted} new"
+    return results, summary_message
 
 
 # app/routes/performers.py
@@ -207,8 +211,11 @@ delivery_bp = Blueprint("delivery", __name__)
 @delivery_bp.route("/delivery-surge")
 def delivery_surge():
     sort_by = request.args.get("sort", "delivery_spike")
-    stocks = filter_delivery_surge_stocks(save_to_db=True)
 
+    # Run screener and get summary
+    stocks, summary_message = filter_delivery_surge_stocks(save_to_db=True)
+
+    # Sort results
     if sort_by == "roc":
         stocks.sort(key=lambda x: x["roc_21d"], reverse=True)
     elif sort_by == "rs":
@@ -216,9 +223,10 @@ def delivery_surge():
     else:
         stocks.sort(key=lambda x: x["delivery_spike"], reverse=True)
 
-    last_processed_time = datetime.now()
-    return render_template("delivery_surge.html", stocks=stocks,
-                           last_processed_time=last_processed_time,
+    return render_template("delivery_surge.html",
+                           stocks=stocks,
+                           summary_message=summary_message,
+                           last_processed_time=datetime.now(),
                            sort_by=sort_by)
 
 # Delivery Surge History Route

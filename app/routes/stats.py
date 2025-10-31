@@ -40,9 +40,22 @@ def stats_dashboard():
 
     trades = Trade.query.filter_by(user_id=current_user.id).all()
     if start_date:
-        trades = [t for t in trades if t.exit_date and t.exit_date >= start_date]
+        trades = [
+            t for t in trades
+            if (
+                (t.status == "Closed" and t.exit_date and t.exit_date >= start_date) or
+                (t.status == "Open" and t.entry_date and t.entry_date >= start_date)
+            )
+        ]
+
     if filter_range == 'last_year':
-        trades = [t for t in trades if t.exit_date and start_date <= t.exit_date <= end_date]
+        trades = [
+            t for t in trades
+            if (
+                (t.status == "Closed" and t.exit_date and start_date <= t.exit_date <= end_date) or
+                (t.status == "Open" and t.entry_date and start_date <= t.entry_date <= end_date)
+            )
+        ]
 
     closed_trades = [t for t in trades if t.status == "Closed"]
     open_trades = [t for t in trades if t.status == "Open"]
@@ -79,7 +92,7 @@ def stats_dashboard():
     avg_daily_vol = round(sum(e.quantity for e in total_entries) / len(trades), 1) if trades else 0
     avg_size = round(sum(e.quantity for e in total_entries) / len(total_entries), 1) if total_entries else 0
     equity_curve, max_drawdown = get_equity_curve(closed_trades)
-    stock_stats = get_stock_stats(closed_trades)
+    most_traded_stats, most_profitable_stats = get_stock_stats(closed_trades, limit=20) # Most Traded and Most Profitable stocks
 
     # 📊 Prepare Profit/Loss Bar Chart Data
     daily_pnl = defaultdict(float)
@@ -135,7 +148,8 @@ def stats_dashboard():
         'avg_daily_vol': avg_daily_vol,
         'avg_size': avg_size,
         'max_drawdown': max_drawdown,
-        'stock_stats': stock_stats,
+        'stock_stats': most_traded_stats,
+        'most_profitable_stats': most_profitable_stats,
         'equity_curve': equity_curve,
         'trade_bars': trade_bars,  # 👈 Add this to template context for daily bars
         'weekly_bars': weekly_bars, # context for weekly bars
