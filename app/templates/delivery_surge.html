@@ -16,7 +16,7 @@
         <thead class="bg-gray-200">
             <tr>
                 <th class="px-4 py-2">#</th>
-                <th class="px-4 py-2">Ticker</th>
+                <th class="px-4 py-2">Symbol</th>
                 <th class="px-4 py-2">Price</th>
                 <th class="px-4 py-2">Change %</th>
                 <th class="px-4 py-2">Volume</th>
@@ -27,9 +27,10 @@
         </thead>
         <tbody>
             {% for stock in stocks %}
+            {% set clean_symbol = stock.ticker.replace('.NS', '').replace('.BO', '') %}
             <tr class="border-t">
                 <td class="px-4 py-2">{{ loop.index }}</td>
-                <td class="px-4 py-2 font-semibold">{{ stock.ticker }}</td>
+                <td class="px-4 py-2 font-semibold">{{ clean_symbol }}</td>
                 <td class="px-4 py-2">₹{{ "%.2f"|format(stock.current_price) }}</td>
                 <td class="px-4 py-2 text-green-600">{{ stock.price_change_pct }}%</td>
                 <td class="px-4 py-2">{{ "{:,}".format(stock.volume) }}</td>
