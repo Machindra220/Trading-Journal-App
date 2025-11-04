@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, flash
 from sqlalchemy import func
 from app.extensions import db
 from app.models import Stage2Stock, Stage2DeliveryStock
@@ -52,10 +52,19 @@ def analyze_stage2_stock(symbol, benchmark_hist=None):
         print(f"Error analyzing {symbol}: {e}")
         return None
 
-@stage2_delivery_bp.route("/stage2-delivery-screener")
-def stage2_delivery_screener():
-    symbol_filter = request.args.get("symbol", "").upper().strip()
-    sort_by = request.args.get("sort", "delivery_spike")
+#Stage 2 Delivery Screener
+@stage2_delivery_bp.route("/stage2-delivery-screener", methods=["GET"])
+def stage2_delivery_screener_view():
+    return render_template("stage2_delivery_screener.html",
+                           stocks=[],
+                           sort_by="delivery_spike",
+                           symbol_filter="",
+                           summary_message=None)
+
+@stage2_delivery_bp.route("/stage2-delivery-screener", methods=["POST"])
+def stage2_delivery_screener_process():
+    symbol_filter = request.form.get("symbol", "").upper().strip()
+    sort_by = request.form.get("sort", "delivery_spike")
     today = datetime.today().date()
 
     entries = get_latest_stage2_symbols()
@@ -81,7 +90,6 @@ def stage2_delivery_screener():
             data["symbol_clean"] = symbol.replace(".NS", "")
             results.append(data)
 
-            # ✅ Save to DB
             existing = Stage2DeliveryStock.query.filter(
                 and_(
                     Stage2DeliveryStock.symbol == symbol,
@@ -118,7 +126,6 @@ def stage2_delivery_screener():
 
     db.session.commit()
 
-    # ✅ Sorting
     if sort_by == "volume":
         results.sort(key=lambda x: x["volume"], reverse=True)
     elif sort_by == "roc":
@@ -135,16 +142,26 @@ def stage2_delivery_screener():
                            sort_by=sort_by,
                            symbol_filter=symbol_filter,
                            summary_message=summary_message)
-    
+
+Stage2DeliveryStock
 
 @stage2_delivery_bp.route("/stage2-delivery-history")
 def stage2_delivery_history():
     cutoff = datetime.today().date() - timedelta(days=30)
     symbol_filter = request.args.get("symbol", "").upper().strip()
+    date_filter = request.args.get("date", "").strip()
 
     query = Stage2DeliveryStock.query.filter(Stage2DeliveryStock.date >= cutoff)
+
     if symbol_filter:
         query = query.filter(Stage2DeliveryStock.symbol.ilike(f"%{symbol_filter}%"))
+
+    if date_filter:
+        try:
+            parsed_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(Stage2DeliveryStock.date == parsed_date)
+        except ValueError:
+            flash("⚠️ Invalid date format. Please use YYYY-MM-DD.", "error")
 
     stocks = query.order_by(Stage2DeliveryStock.date.desc()).all()
 
@@ -177,4 +194,7 @@ def stage2_delivery_history():
             "tag": tag
         })
 
-    return render_template("stage2_delivery_history.html", stocks=enriched, symbol_filter=symbol_filter)
+    return render_template("stage2_delivery_history.html",
+                           stocks=enriched,
+                           symbol_filter=symbol_filter,
+                           date_filter=date_filter)

@@ -3,6 +3,17 @@
 {% block content %}
 <div class="max-w-6xl mx-auto p-6">
   <h1 class="text-2xl font-bold mb-4">🚀 Stage 2 Delivery Screener</h1>
+
+  <form method="post" action="{{ url_for('stage2_delivery.stage2_delivery_screener_process') }}" id="screenerTriggerForm" class="mb-4">
+        <!-- 🔐 CSRF Protection -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" id="runScreenerButton"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+      🚀 Run Stage 2 Delivery Screener
+    </button>
+    <span id="screenerSpinner" class="ml-3 hidden text-green-600 animate-spin">⏳</span>
+  </form>
+
   {% if summary_message %}
     <p class="text-green-700 bg-green-100 border border-green-300 rounded px-4 py-2 mb-4">
       {{ summary_message }}
@@ -19,7 +30,7 @@
             <option value="rs" {% if sort_by == 'rs' %}selected{% endif %}>RS vs Index</option>
         </select>
         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">🔍 Apply</button>
-        <a href="{{ url_for('stage2_delivery.stage2_delivery_screener') }}"
+        <a href="{{ url_for('stage2_delivery.stage2_delivery_screener_view') }}"
             class="px-4 py-2 bg-gray-300 text-black rounded">🔄 Reset</a>
     </form>
 
@@ -45,7 +56,7 @@
           <td class="px-4 py-2">{{ stock.date.strftime('%d-%b-%Y') }}</td>
           <td class="px-4 py-2 flex items-center gap-2">
             <span id="symbol-{{ loop.index }}">{{ stock.symbol_clean }}</span>
-            <button onclick="copyToClipboard('symbol-{{ loop.index }}')" class="text-blue-600 hover:underline text-xs">📋</button>
+            <button onclick="copyToClipboard('{{ stock.symbol_clean }}')" class="text-blue-600 hover:underline text-xs">📋</button>
           </td>
           <td class="px-4 py-2">₹{{ "%.2f"|format(stock.price) }}</td>
           <td class="px-4 py-2">{{ "{:,}".format(stock.volume) }}</td>
@@ -65,13 +76,35 @@
 </div>
 
 <script>
-function copyToClipboard(id) {
-  const el = document.getElementById(id);
-  if (el) {
-    navigator.clipboard.writeText(el.textContent).then(() => {
-      alert(`Copied: ${el.textContent}`);
-    });
+// function copyToClipboard(id) {
+//   const el = document.getElementById(id);
+//   if (el) {
+//     navigator.clipboard.writeText(el.textContent).then(() => {
+//       alert(`Copied: ${el.textContent}`);
+//     });
+//   }
+// }
+
+document.getElementById("screenerTriggerForm")?.addEventListener("submit", function(e) {
+  const btn = document.getElementById("runScreenerButton");
+  const spinner = document.getElementById("screenerSpinner");
+
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+  spinner.classList.remove("hidden");
+});
+
+window.addEventListener("load", function() {
+  const message = document.querySelector("[data-summary-message]")?.textContent;
+  if (message) {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.className = "fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
   }
-}
+});
+
+
 </script>
 {% endblock %}

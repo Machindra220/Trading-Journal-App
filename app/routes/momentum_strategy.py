@@ -79,14 +79,38 @@ def run_momentum_strategy():
     db.session.commit()
     return to_remove, to_add, today.date(), next_schedule_date
 
-@momentum_bp.route('/momentum/rebalance')
-def momentum_rebalance():
+@momentum_bp.route('/momentum/rebalance', methods=["GET"])
+def momentum_rebalance_view():
+    return render_template("momentum_result.html",
+                        removed=[],
+                        added=[],
+                        run_date=None,
+                        next_schedule_date=get_next_schedule_date(),
+                        summary_message=None)
+
+@momentum_bp.route('/momentum/rebalance', methods=["POST"])
+def momentum_rebalance_process():
     removed, added, run_date, next_schedule_date = run_momentum_strategy()
+
+    summary_message = f"✅ Rebalance completed on {run_date.strftime('%d %b %Y')}"
+
     return render_template("momentum_result.html",
                            removed=removed,
                            added=added,
                            run_date=run_date,
-                           next_schedule_date=next_schedule_date)
+                           next_schedule_date=next_schedule_date,
+                           summary_message=summary_message)
+
+
+
+# @momentum_bp.route('/momentum/rebalance')
+# def momentum_rebalance():
+#     removed, added, run_date, next_schedule_date = run_momentum_strategy()
+#     return render_template("momentum_result.html",
+#                            removed=removed,
+#                            added=added,
+#                            run_date=run_date,
+#                            next_schedule_date=next_schedule_date)
 
 @momentum_bp.route('/momentum/history')
 def momentum_history():

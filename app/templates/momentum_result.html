@@ -2,7 +2,28 @@
 
 {% block content %}
 <h2 class="text-2xl font-semibold mb-4">📊 Momentum Strategy Results</h2>
-<p>Run Date: {{ run_date }} | Scheduled Date: {{ first_monday }}</p>
+
+<!-- ✅ Rebalance Trigger -->
+<form method="post" action="{{ url_for('momentum.momentum_rebalance_process') }}" id="rebalanceForm" class="mb-6">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <button type="submit" id="runRebalanceButton"
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+    🔄 Run Rebalance Screener
+  </button>
+  <span id="rebalanceSpinner" class="ml-3 hidden text-green-600 animate-spin">⏳</span>
+</form>
+
+<!-- ✅ Summary Toast -->
+{% if summary_message %}
+  <p data-summary-message class="text-green-700 bg-green-100 border border-green-300 rounded px-4 py-2 mb-4">
+    {{ summary_message }}
+  </p>
+{% endif %}
+
+<!-- ✅ Run Date Info -->
+<p class="text-sm text-gray-600 mb-4">
+  Run Date: {{ run_date }} | Scheduled Date: {{ next_schedule_date }}
+</p>
 
 <!-- 🔴 Removal List -->
 <h3 class="text-xl text-red-600 mt-6 mb-2">Underperformers (To Remove)</h3>
@@ -27,4 +48,27 @@
 {% else %}
 <p class="text-gray-600">✅ No new additions needed. Portfolio remains unchanged.</p>
 {% endif %}
+
+<!-- ✅ Spinner + Toast Script -->
+<script>
+document.getElementById("rebalanceForm")?.addEventListener("submit", function(e) {
+  const btn = document.getElementById("runRebalanceButton");
+  const spinner = document.getElementById("rebalanceSpinner");
+
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+  spinner.classList.remove("hidden");
+});
+
+window.addEventListener("load", function() {
+  const message = document.querySelector("[data-summary-message]")?.textContent;
+  if (message) {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.className = "fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+});
+</script>
 {% endblock %}

@@ -5,6 +5,12 @@ function copyToClipboard(text) {
     alert(`Copied: ${text}`);
   });
 }
+// function copyToClipboard(id) {
+//   const el = document.getElementById(id);
+//   if (el) {
+//     navigator.clipboard.writeText(el.textContent);
+//   }
+// }
 
 function toggleSort(key) {
   const header = document.querySelector(`th[onclick="toggleSort('${key}')"]`);
@@ -67,3 +73,28 @@ document.addEventListener("DOMContentLoaded", () => {
     highlightSortedColumns();
   }
 });
+
+// Here is  Stage 2 Screener button scripts
+document.getElementById("screenerForm").addEventListener("submit", function(e) {
+  const btn = document.getElementById("runButton");
+  const spinner = document.getElementById("spinner");
+
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+  spinner.classList.remove("hidden");
+});
+
+window.addEventListener("load", function() {
+  const el = document.getElementById("summaryMessage");
+  const message = el?.dataset.message;
+  if (message) {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.className = "fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+});
+
+
+
