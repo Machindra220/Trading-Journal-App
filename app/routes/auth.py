@@ -68,7 +68,7 @@ def login():
         except CSRFError:
             flash("Invalid or missing CSRF token.", "error")
             return redirect(url_for('auth.login'))
-
+        # print('Machindra and machindra')
         username = request.form.get('username').strip()
         password = request.form.get('password')
 

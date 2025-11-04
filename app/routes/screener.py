@@ -134,8 +134,17 @@ def get_persistent_stage2_stocks():
     return {symbol: days for symbol, days in counts}
 
 # 🌐 Main stage2 screener route
-@screener_bp.route("/stage2")
+@screener_bp.route("/stage2", methods=["GET"])
 def stage2_view():
+    return render_template("stage2.html",
+                           stocks=[],
+                           last_processed_time=None,
+                           source_name="MCAPge250cr",
+                           summary_message=None,
+                           error=None)
+
+@screener_bp.route("/stage2", methods=["POST"])
+def stage2_process():
     path = "data/MCAPge250cr.csv"
     if not os.path.exists(path):
         return render_template("stage2.html", error=f"⚠️ Source file not found: {path}")
@@ -167,8 +176,9 @@ def stage2_view():
 
     return render_template("stage2.html", stocks=enriched,
                            last_processed_time=last_processed_time,
-                           source_name=source_name, 
-                           summary_message=summary_message)
+                           source_name=source_name,
+                           summary_message=summary_message,
+                           error=None)
 
 # 📦 Saved stocks view
 @screener_bp.route("/stage2/saved")
@@ -221,40 +231,86 @@ def stage2_saved():
                            symbol_filter=symbol_filter)
 
 # 📊 Sector analysis route
-@screener_bp.route("/sector-analysis")
-def sector_analysis():
+@screener_bp.route("/sector-analysis", methods=["GET"])
+def sector_analysis_view():
+    return render_template("sector_analysis.html",
+                           sectors=[],
+                           summary_message=None,
+                           error=None)
+
+@screener_bp.route("/sector-analysis", methods=["POST"])
+def sector_analysis_process():
     path = "data/sector_list.csv"
     if not os.path.exists(path):
-        return render_template("sector_analysis.html", error=f"⚠️ Source file not found: {path}")
+        return render_template("sector_analysis.html", error=f"⚠️ Source file not found: {path}", sectors=[])
 
     try:
         df = pd.read_csv(path)
     except Exception as e:
-        return render_template("sector_analysis.html", error=f"⚠️ Failed to read CSV: {e}")
+        return render_template("sector_analysis.html", error=f"⚠️ Failed to read CSV: {e}", sectors=[])
 
     if "index_symbol" not in df.columns:
-        return render_template("sector_analysis.html", error="⚠️ 'index_symbol' column missing in sector_list.csv")
+        return render_template("sector_analysis.html", error="⚠️ 'index_symbol' column missing in sector_list.csv", sectors=[])
 
     results = []
     for _, row in df.iterrows():
         index_symbol = row["index_symbol"]
         if pd.isna(index_symbol) or not str(index_symbol).strip():
-            continue  # skip sectors without index symbol
+            continue
 
         data = analyze_sector(index_symbol)
         if data:
             data["sector"] = row["sector"]
             results.append(data)
 
-    # Sort by tag strength
     tag_order = {"🔥 Strong": 1, "🌱 Emerging": 2, "⚠️ Weak": 3, "⏸ Neutral": 4}
     results.sort(key=lambda x: tag_order.get(x.get("tag", ""), 5))
 
-    # Add serial numbers
     for i, sector in enumerate(results, start=1):
         sector["serial"] = i
 
-    return render_template("sector_analysis.html", sectors=results)
+    summary_message = f"✅ Sector analysis completed at {datetime.now().strftime('%d %b %Y %I:%M %p')}"
+
+    return render_template("sector_analysis.html",
+                           sectors=results,
+                           summary_message=summary_message,
+                           error=None)
+
+
+# @screener_bp.route("/sector-analysis")
+# def sector_analysis():
+#     path = "data/sector_list.csv"
+#     if not os.path.exists(path):
+#         return render_template("sector_analysis.html", error=f"⚠️ Source file not found: {path}")
+
+#     try:
+#         df = pd.read_csv(path)
+#     except Exception as e:
+#         return render_template("sector_analysis.html", error=f"⚠️ Failed to read CSV: {e}")
+
+#     if "index_symbol" not in df.columns:
+#         return render_template("sector_analysis.html", error="⚠️ 'index_symbol' column missing in sector_list.csv")
+
+#     results = []
+#     for _, row in df.iterrows():
+#         index_symbol = row["index_symbol"]
+#         if pd.isna(index_symbol) or not str(index_symbol).strip():
+#             continue  # skip sectors without index symbol
+
+#         data = analyze_sector(index_symbol)
+#         if data:
+#             data["sector"] = row["sector"]
+#             results.append(data)
+
+#     # Sort by tag strength
+#     tag_order = {"🔥 Strong": 1, "🌱 Emerging": 2, "⚠️ Weak": 3, "⏸ Neutral": 4}
+#     results.sort(key=lambda x: tag_order.get(x.get("tag", ""), 5))
+
+#     # Add serial numbers
+#     for i, sector in enumerate(results, start=1):
+#         sector["serial"] = i
+
+#     return render_template("sector_analysis.html", sectors=results)
 
 # ✅ Validate sector files on startup
 def validate_sector_files(sector_csv_path="data/sector_list.csv", sector_dir="data/sectors"):

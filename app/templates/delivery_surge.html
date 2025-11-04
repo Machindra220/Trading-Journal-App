@@ -4,13 +4,25 @@
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
     <h1 class="text-2xl font-bold mb-2">📈 Delivery Surge Screener</h1>
-    {% if summary_message %}
-    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-        {{ summary_message }}
-    </div>
-    {% endif %}
+    <form method="post" action="{{ url_for('delivery.delivery_surge_process') }}" id="screenerForm" class="mb-4">
+         <!-- 🔐 CSRF Protection -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" id="runButton"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            🚀 Run Delivery Surge Screener
+        </button>
+        <span id="spinner" class="ml-3 hidden text-blue-600 animate-spin">⏳</span>
+    </form>
 
-    <p class="text-sm text-gray-600 mb-4">Last updated: {{ last_processed_time.strftime('%d %b %Y, %H:%M') }}</p>
+{% if summary_message %}
+  <div id="summaryMessage" data-message="{{ summary_message | escape }}"></div>
+{% endif %}
+
+    {% if last_processed_time %}
+    <p class="text-sm text-gray-600 mb-4">
+        Last updated: {{ last_processed_time.strftime('%d %b %Y, %H:%M') }}
+    </p>
+    {% endif %}
 
     <table class="min-w-full bg-white rounded shadow">
         <thead class="bg-gray-200">

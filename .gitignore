@@ -15,3 +15,6 @@ generate_schema.py
 history_commands.txt
 static/uploads/
 .txt 
+portfolio-app.tar
+backup.sql
+Errors-while-hosting-on-ec2-ubuntu.txt

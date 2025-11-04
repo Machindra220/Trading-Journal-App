@@ -17,6 +17,7 @@ def dashboard():
 
     trade_data = []
     total_invested_open = 0
+    open_trade_count = 0  # ✅ Open trades count for starting no data app
 
     for trade in trades:
         if trade.status != "Open" or not trade.entries:
