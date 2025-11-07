@@ -102,16 +102,6 @@ def momentum_rebalance_process():
                            summary_message=summary_message)
 
 
-
-# @momentum_bp.route('/momentum/rebalance')
-# def momentum_rebalance():
-#     removed, added, run_date, next_schedule_date = run_momentum_strategy()
-#     return render_template("momentum_result.html",
-#                            removed=removed,
-#                            added=added,
-#                            run_date=run_date,
-#                            next_schedule_date=next_schedule_date)
-
 @momentum_bp.route('/momentum/history')
 def momentum_history():
     symbol_filter = request.args.get("symbol", "").upper().strip()

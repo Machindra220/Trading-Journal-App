@@ -1,10 +1,10 @@
 from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
-from sqlalchemy import DateTime
+# from sqlalchemy import DateTime
 
 
 class User(UserMixin, db.Model):
@@ -206,3 +206,23 @@ class Stage2DeliveryStock(db.Model):
 
     def __repr__(self):
         return f"<Stage2DeliveryStock {self.symbol} @ {self.date}>"
+
+class EPSScreenerResult(db.Model):
+    __tablename__ = 'eps_screener_results'
+
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    symbol_clean = db.Column(db.String(20), nullable=False)
+    screener_date = db.Column(db.Date, nullable=False)
+    price = db.Column(db.Numeric(10, 2))
+    volume = db.Column(db.BigInteger)
+    delivery = db.Column(db.Numeric(10, 2))
+    eps_growth_q1 = db.Column(db.Numeric(6, 2))
+    eps_growth_q2 = db.Column(db.Numeric(6, 2))
+    eps_growth_q3 = db.Column(db.Numeric(6, 2))
+    roc_21d = db.Column(db.Numeric(6, 2))
+    rs_vs_index_21d = db.Column(db.Numeric(6, 2))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"<EPSScreenerResult {self.symbol_clean} @ {self.screener_date}>"

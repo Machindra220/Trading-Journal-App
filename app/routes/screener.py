@@ -116,7 +116,6 @@ def save_screened_stocks(df):
     db.session.commit()
     return updated, inserted
 
-
 # 🧹 Auto-delete old records
 def delete_old_stage2_records():
     cutoff = date.today() - timedelta(days=30)
@@ -275,42 +274,6 @@ def sector_analysis_process():
                            sectors=results,
                            summary_message=summary_message,
                            error=None)
-
-
-# @screener_bp.route("/sector-analysis")
-# def sector_analysis():
-#     path = "data/sector_list.csv"
-#     if not os.path.exists(path):
-#         return render_template("sector_analysis.html", error=f"⚠️ Source file not found: {path}")
-
-#     try:
-#         df = pd.read_csv(path)
-#     except Exception as e:
-#         return render_template("sector_analysis.html", error=f"⚠️ Failed to read CSV: {e}")
-
-#     if "index_symbol" not in df.columns:
-#         return render_template("sector_analysis.html", error="⚠️ 'index_symbol' column missing in sector_list.csv")
-
-#     results = []
-#     for _, row in df.iterrows():
-#         index_symbol = row["index_symbol"]
-#         if pd.isna(index_symbol) or not str(index_symbol).strip():
-#             continue  # skip sectors without index symbol
-
-#         data = analyze_sector(index_symbol)
-#         if data:
-#             data["sector"] = row["sector"]
-#             results.append(data)
-
-#     # Sort by tag strength
-#     tag_order = {"🔥 Strong": 1, "🌱 Emerging": 2, "⚠️ Weak": 3, "⏸ Neutral": 4}
-#     results.sort(key=lambda x: tag_order.get(x.get("tag", ""), 5))
-
-#     # Add serial numbers
-#     for i, sector in enumerate(results, start=1):
-#         sector["serial"] = i
-
-#     return render_template("sector_analysis.html", sectors=results)
 
 # ✅ Validate sector files on startup
 def validate_sector_files(sector_csv_path="data/sector_list.csv", sector_dir="data/sectors"):

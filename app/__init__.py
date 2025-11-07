@@ -34,7 +34,9 @@ def create_app():
     from app.routes.screener import screener_bp
     from app.routes.momentum_strategy import momentum_bp
     from app.routes.stage2_delivery import stage2_delivery_bp
+    from app.routes.eps_screener import eps_bp
 
+    app.register_blueprint(eps_bp, url_prefix="/eps")
     app.register_blueprint(stage2_delivery_bp)
     app.register_blueprint(momentum_bp)
     app.register_blueprint(screener_bp, url_prefix="/screener")

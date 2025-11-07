@@ -12,6 +12,8 @@ function copyToClipboard(text) {
 //   }
 // }
 
+
+
 function toggleSort(key) {
   const header = document.querySelector(`th[onclick="toggleSort('${key}')"]`);
   const currentOrder = header.getAttribute("data-sort");

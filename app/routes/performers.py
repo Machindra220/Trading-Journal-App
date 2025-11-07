@@ -102,32 +102,6 @@ def top_performers_process():
                            summary_message=summary_message)
 
 
-# @performers_bp.route("/top-performers")
-# def top_performers():
-#     nifty_200 = get_top_performers("data/nifty_200.csv", top_n=20, suffix=".NS")
-#     nifty_500 = get_top_performers("data/nifty_500.csv", top_n=20, suffix=".NS")
-#     bse_200 = get_top_performers("data/bse_200.csv", top_n=20, suffix=".BO")
-
-#     n200_set = set([s["symbol"] for s in nifty_200])
-#     n500_set = set([s["symbol"] for s in nifty_500])
-#     bse_set = set([s["symbol"] for s in bse_200])
-    
-#     overlap_n200_bse = n200_set & bse_set
-#     overlap_n200_n500 = n200_set & n500_set
-#     overlap_bse_n500 = bse_set & n500_set
-#     overlap_all = n200_set & bse_set & n500_set
-#     last_processed_time = datetime.now()
-
-#     return render_template("top_performers.html",
-#                            nifty_200=nifty_200,
-#                            nifty_500=nifty_500,
-#                            bse_200=bse_200,
-#                            overlap_n200_bse=overlap_n200_bse,
-#                            overlap_n200_n500=overlap_n200_n500,
-#                            overlap_bse_n500=overlap_bse_n500,
-#                            overlap_all=overlap_all,
-#                            last_processed_time=last_processed_time)
-
 @performers_bp.route("/upload-csv", methods=["POST"])
 def upload_csv():
     file = request.files.get("csv_file")
@@ -279,36 +253,25 @@ def delivery_surge_process():
                            sort_by=sort_by)
 
 
-# @delivery_bp.route("/delivery-surge")
-# def delivery_surge():
-#     sort_by = request.args.get("sort", "delivery_spike")
-
-#     # Run screener and get summary
-#     stocks, summary_message = filter_delivery_surge_stocks(save_to_db=True)
-
-#     # Sort results
-#     if sort_by == "roc":
-#         stocks.sort(key=lambda x: x["roc_21d"], reverse=True)
-#     elif sort_by == "rs":
-#         stocks.sort(key=lambda x: x["rs_vs_index_21d"], reverse=True)
-#     else:
-#         stocks.sort(key=lambda x: x["delivery_spike"], reverse=True)
-
-#     return render_template("delivery_surge.html",
-#                            stocks=stocks,
-#                            summary_message=summary_message,
-#                            last_processed_time=datetime.now(),
-#                            sort_by=sort_by)
 
 # Delivery Surge History Route
 @delivery_bp.route("/delivery/history")
 def delivery_history():
     cutoff = datetime.today().date() - timedelta(days=30)
     symbol_filter = request.args.get("symbol", "").upper().strip()
+    date_filter = request.args.get("date", "").strip()
 
     query = DeliverySurgeStock.query.filter(DeliverySurgeStock.date >= cutoff)
+
     if symbol_filter:
         query = query.filter(DeliverySurgeStock.symbol.ilike(f"%{symbol_filter}%"))
+
+    if date_filter:
+        try:
+            parsed_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(DeliverySurgeStock.date == parsed_date)
+        except ValueError:
+            flash("⚠️ Invalid date format. Please use YYYY-MM-DD.", "error")
 
     stocks = query.order_by(DeliverySurgeStock.date.desc()).all()
 
@@ -341,4 +304,7 @@ def delivery_history():
             "tag": tag
         })
 
-    return render_template("delivery_history.html", stocks=enriched, symbol_filter=symbol_filter)
+    return render_template("delivery_history.html",
+                           stocks=enriched,
+                           symbol_filter=symbol_filter,
+                           date_filter=date_filter)

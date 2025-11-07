@@ -1,0 +1,178 @@
+{% extends "base_authenticated.html" %}
+{% block title %}EPS Surge Screener{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">📈 EPS Surge Screener</h1>
+    {% if summary %}
+    <p class="text-green-600 text-sm mb-2">{{ summary }}</p>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <p class="text-{{ 'red' if category == 'error' else 'yellow' }}-600 text-sm">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+  {% if source_name %}
+    <p class="text-sm text-gray-600 mb-4">Source: <strong>{{ source_name }}</strong></p>
+  {% endif %}
+
+  <!-- 🔘 Dual Input Forms -->
+  <div class="flex flex-wrap gap-6 mb-6">
+    <!-- Manual Form -->
+    <form method="post" action="{{ url_for('eps.eps_screener_from_form') }}" class="flex gap-4 items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div>
+        <label for="symbol" class="block text-sm font-medium text-gray-700 mb-1">Single Symbol</label>
+        <input type="text" name="symbol" id="symbol" placeholder="e.g. INFY"
+               class="px-3 py-2 border rounded w-48">
+      </div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded h-10">🔍 Run for Symbol</button>
+    </form>
+
+    <!-- File Trigger -->
+    <form method="post" action="{{ url_for('eps.eps_screener_from_file') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded h-10 mt-6">📂 Run Screener from CSV</button>
+    </form>
+    <!-- Stage 2 EPS Screener Trigger -->
+    <form method="post" action="{{ url_for('eps.eps_screener_stage2_eps') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded h-10 mt-6">🚀 Run Stage 2 + EPS Screener</button>
+    </form>
+
+  </div>
+
+  <!-- 📊 Manual Result Table -->
+  {% if results_manual %}
+  <h2 class="text-lg font-semibold mb-2">🔎 Result for Manual Symbol</h2>
+  <div class="overflow-x-auto mb-8">
+    <table class="table-auto w-full border-collapse shadow-md rounded bg-white" id="manual-table">
+      <thead class="bg-gray-200 text-sm">
+        <tr>
+          <th class="px-4 py-2 cursor-pointer">#</th>
+          <th class="px-4 py-2 cursor-pointer">Date</th>
+          <th class="px-4 py-2 cursor-pointer">Symbol</th>
+          <th class="px-4 py-2 cursor-pointer">Price</th>
+          <th class="px-4 py-2 cursor-pointer">EPS% Q1 | Q2 | Q3</th>
+          <th class="px-4 py-2 cursor-pointer">Volume</th>
+          <th class="px-4 py-2 cursor-pointer">Delivery</th>
+          <th class="px-4 py-2 cursor-pointer">ROC (21D)</th>
+          <th class="px-4 py-2 cursor-pointer">RS vs Index</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in results_manual %}
+        <tr class="border-t text-sm hover:bg-gray-50">
+          <td class="px-4 py-2">{{ loop.index }}</td>
+          <td class="px-4 py-2  text-right">{{ stock.date }}</td>
+          <td class="px-4 py-2 flex items-center gap-2">
+            <span id="copy-manual-{{ stock.symbol_clean }}">{{ stock.symbol_clean }}</span>
+            <button onclick="copyToClipboard('{{ stock.symbol_clean }}')" class="text-blue-600 hover:underline text-xs relative group">📋
+              <span id="tooltip-manual-{{ stock.symbol_clean }}" class="absolute -top-6 left-0 bg-black text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300">Copied!</span>
+            </button>
+          </td>
+          <td class="px-4 py-2 text-right">₹{{ stock.price }}</td>
+          <td class="px-4 py-2 text-right">{{ stock.eps_growth[0] }}% | {{ stock.eps_growth[1] }}% | {{ stock.eps_growth[2] }}%</td>
+          <td class="px-4 py-2 text-right">{{ "{:,}".format(stock.volume) }}</td>
+          <td class="px-4 py-2 text-right">{{ "{:,}".format(stock.delivery) }}</td>
+          <td class="px-4 py-2 text-right">{{ stock.roc_21d }}%</td>
+          <td class="px-4 py-2 text-right">{{ stock.rs_vs_index_21d }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-red-600">⚠️ No qualifying EPS surge found for this symbol.</p>
+  {% endif %}
+
+  <!-- 📊 CSV Result Table -->
+  {% if results_csv %}
+  <h2 class="text-lg font-semibold mb-2">📂 Screener Results from CSV</h2>
+    <div class="overflow-x-auto">
+    <table class="table-auto w-full border-collapse shadow-md rounded bg-white" id="csv-table">
+        <thead class="bg-gray-200 text-sm">
+        <tr>
+            <th class="px-4 py-2 cursor-pointer">#</th>
+            <th class="px-4 py-2 cursor-pointer">Date</th>
+            <th class="px-4 py-2 cursor-pointer">Symbol</th>
+            <th class="px-4 py-2 cursor-pointer">Price</th>
+            <th class="px-4 py-2 cursor-pointer">EPS% Q1 | Q2 | Q3</th>
+            <th class="px-4 py-2 cursor-pointer">Volume</th>
+            <th class="px-4 py-2 cursor-pointer">Delivery</th>
+            <th class="px-4 py-2 cursor-pointer">ROC (21D)</th>
+            <th class="px-4 py-2 cursor-pointer">RS vs Index</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for stock in results_csv %}
+        <tr class="border-t text-sm hover:bg-gray-50">
+            <td class="px-4 py-2">{{ loop.index }}</td>
+            <td class="px-4 py-2">{{ stock.date }}</td>
+            <td class="px-4 py-2 flex items-center gap-2">
+            <span id="copy-csv-{{ stock.symbol_clean }}">{{ stock.symbol_clean }}</span>
+            <button onclick="copyToClipboard('{{ stock.symbol_clean }}')" class="text-blue-600 hover:underline text-xs relative group">📋
+                <span id="tooltip-csv-{{ stock.symbol_clean }}" class="absolute -top-6 left-0 bg-black text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300">Copied!</span>
+            </button>
+            </td>
+            <td class="px-4 py-2">₹{{ stock.price }}</td>
+            <td class="px-4 py-2">{{ stock.eps_growth[0] }}% | {{ stock.eps_growth[1] }}% | {{ stock.eps_growth[2] }}%</td>
+            <td class="px-4 py-2">{{ "{:,}".format(stock.volume) }}</td>
+            <td class="px-4 py-2">{{ "{:,}".format(stock.delivery) }}</td>
+            <td class="px-4 py-2">{{ stock.roc_21d }}%</td>
+            <td class="px-4 py-2">{{ stock.rs_vs_index_21d }}%</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+  <p class="text-sm text-red-600">⚠️ No qualifying EPS surge found for CSV symbols.</p>
+    {% endif %}
+<!-- 📋 Copy-to-Clipboard Script -->
+<script>
+function copyToClipboard(id) {
+  const el = document.getElementById("copy-" + id);
+  if (el) {
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      const tooltip = document.getElementById("tooltip-" + id);
+      if (tooltip) {
+        tooltip.style.opacity = "1";
+        setTimeout(() => {
+          tooltip.style.opacity = "0";
+        }, 1500);
+      }
+    });
+  }
+}
+
+</script>
+
+<!-- 🔃 Sortable Table Script -->
+<script>
+document.querySelectorAll("table th").forEach((header, index) => {
+  header.addEventListener("click", () => {
+    const table = header.closest("table");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr")).filter(row => row.querySelector("td"));
+
+    const isAsc = header.classList.toggle("asc");
+    table.querySelectorAll("th").forEach(th => th !== header && th.classList.remove("asc", "desc"));
+    header.classList.toggle("desc", !isAsc);
+
+    rows.sort((a, b) => {
+      const cellA = a.children[index].textContent.trim();
+      const cellB = b.children[index].textContent.trim();
+      const valA = parseFloat(cellA.replace(/[^0-9.-]/g, "")) || cellA;
+      const valB = parseFloat(cellB.replace(/[^0-9.-]/g, "")) || cellB;
+      return isAsc ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+  });
+});
+</script>
+{% endblock %}
