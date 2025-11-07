@@ -28,10 +28,18 @@ def analyze_sector(index_symbol, benchmark="^NSEI"):
         else "⏸ Neutral"
     )
 
+    summary_message = (
+        f"{index_symbol} is currently tagged as {tag}. "
+        f"Price: ₹{round(latest['Close'], 2)}, "
+        f"30W MA: ₹{round(latest['30w_ma'], 2)}, "
+        f"RS: {round(latest['rs'], 2)}"
+    )
+
     return {
         "index": index_symbol,
         "price": round(latest["Close"], 2),
         "ma_30w": round(latest["30w_ma"], 2),
         "rs": round(latest["rs"], 2),
-        "tag": tag
+        "tag": tag,
+        "summary_message": summary_message
     }
