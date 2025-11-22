@@ -35,7 +35,10 @@ def create_app():
     from app.routes.momentum_strategy import momentum_bp
     from app.routes.stage2_delivery import stage2_delivery_bp
     from app.routes.eps_screener import eps_bp
+    # from routes.static_pages import static_pages
+    from app.routes.vcp_screener import vcp_bp
 
+    app.register_blueprint(vcp_bp, url_prefix="/vcp")
     app.register_blueprint(eps_bp, url_prefix="/eps")
     app.register_blueprint(stage2_delivery_bp)
     app.register_blueprint(momentum_bp)
@@ -51,6 +54,7 @@ def create_app():
     app.register_blueprint(watchlist_bp)
     app.register_blueprint(performers_bp, url_prefix="/performers")
     app.register_blueprint(delivery_bp, url_prefix="/delivery")
+    # app.register_blueprint(static_pages)
 
     # Home route
     @app.route('/')

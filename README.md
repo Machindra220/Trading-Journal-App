@@ -17,7 +17,7 @@ A secure, modular trading journal built with Flask. Track trades, pin resources,
 - 🕒 Simple statistics for our trading performance tracking
 - 🖥️ Enhanced trade history view with action buttons (v1.1)
 - 🧮 Risk calculator according our investment value
-- 📊 Screeners - Sector Analysis, Delivery Surge, Stage2 Delivery Surge
+- 📊 Screeners - Sector Analysis, Delivery Surge, Stage2 Delivery Surge, EPS Surge for last 3 Quarters
 - 📦 Last 30 days history of Screeners Data
 - 📈 Top 20 Performers from Nifty 200, Bse 200 and Nifty 500
 - 📊 Momentum Strategy and its recrods according to 1 Month Rebalancing

@@ -114,9 +114,9 @@ def upload_csv():
     flash(f"Uploaded {file.filename} successfully.", "info")
     return redirect(url_for("performers.top_performers"))
 
-# delivery_surge screener code
+# delivery_surge screener code -MCAPge250cr/nifty_750
 def load_nifty500_tickers():
-    df = pd.read_csv("data/nifty_750.csv")
+    df = pd.read_csv("data/MCAPge250cr.csv")
     df.columns = df.columns.str.strip().str.lower()
     return [s + ".NS" for s in df["symbol"].dropna().unique()]
 

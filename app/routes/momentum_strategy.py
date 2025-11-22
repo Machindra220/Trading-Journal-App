@@ -32,7 +32,7 @@ def run_momentum_strategy():
     if today.date() != next_schedule_date:
         flash("⚠️ Strategy is designed to run only on the first working day of each month.", "warning")
 
-    # Step 1: Get top 20 performers
+    # Step 1: Get top 20 performers from nifty_500
     top_20 = get_top_performers("data/nifty_500.csv", top_n=20)
     top_10 = [s for s in top_20 if s["current_price"] <= 5000][:10]
 
