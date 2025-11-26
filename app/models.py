@@ -50,6 +50,7 @@ class Trade(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(10), nullable=False, default="Open")
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    strategy_tag = db.Column(db.String(50), nullable=True)   # ✅ New column for strategy tag
     entries = db.relationship('TradeEntry', backref='trade', lazy=True)
     exits = db.relationship('TradeExit', backref='trade', lazy=True)
     @property

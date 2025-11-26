@@ -13,7 +13,13 @@ trades_bp = Blueprint('trades', __name__)
 @trades_bp.route('/dashboard')
 @login_required
 def dashboard():
-    trades = Trade.query.filter_by(user_id=current_user.id).all()
+    strategy_filter = request.args.get('strategy_tag')
+    query = Trade.query.filter_by(user_id=current_user.id)
+
+    if strategy_filter:
+        query = query.filter(Trade.strategy_tag == strategy_filter)
+
+    trades = query.all()
 
     trade_data = []
     total_invested_open = 0
@@ -48,14 +54,15 @@ def dashboard():
             'id': trade.id,
             'stock_name': trade.stock_name,
             'status': trade.status,
-            'total_invested': invested_remaining,
+            'total_invested': round(invested_remaining, 2),
             'quantity': remaining_quantity,
             'exited_quantity': exited_quantity,
             'realized_pnl': round(realized_pnl, 2),
             'realized_profit': round(realized_profit, 2),
             'entry_date': entry_date,
             'note': note,
-            'avg_entry_price': avg_entry_price
+            'avg_entry_price': avg_entry_price,
+            'strategy_tag': trade.strategy_tag
         })
 
         total_invested_open += invested_remaining
@@ -89,13 +96,14 @@ def add_trade():
 
         stock_name = request.form.get('stock_name', '').strip().upper()
         entry_note = request.form.get('entry_note', '').strip()
+        strategy_tag = request.form.get('strategy_tag', '').strip()   # ✅ NEW
 
         if not stock_name:
             flash("Stock name is required.", "error")
             return redirect(url_for('trades.add_trade'))
 
         try:
-            new_trade = Trade(stock_name=stock_name, entry_note=entry_note, user_id=current_user.id)
+            new_trade = Trade(stock_name=stock_name, entry_note=entry_note, user_id=current_user.id, strategy_tag=strategy_tag)
             db.session.add(new_trade)
             db.session.commit()
             flash(f"Trade for {stock_name} created successfully.", "success")
@@ -382,7 +390,7 @@ def delete_exit(exit_id):
 @trades_bp.route('/trade/<int:trade_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_trade(trade_id):
-    trade = Trade.query.get_or_404(trade_id)
+    trade = Trade.query.get_or_404(trade_id)    
 
     if trade.user_id != current_user.id:
         flash("Unauthorized access.", "error")
@@ -395,11 +403,13 @@ def edit_trade(trade_id):
             entry_date_str = request.form.get('entry_date')
             exit_date_str = request.form.get('exit_date')
             journal = request.form.get('journal', '').strip()
+            strategy_tag = request.form.get('strategy_tag', '').strip()
 
             trade.stock_name = stock_name
             trade.entry_date = date.fromisoformat(entry_date_str) if entry_date_str else None
             trade.exit_date = date.fromisoformat(exit_date_str) if exit_date_str else None
             trade.journal = journal
+            trade.strategy_tag = strategy_tag   # ✅ NEW Tag
 
             db.session.commit()
             flash("Trade updated successfully.", "success")
@@ -444,11 +454,17 @@ def trade_history():
     stock_filter = request.args.get('stock', '').upper()
     date_range = request.args.get('date_range')
     sort_order = request.args.get('sort', 'desc')
+    strategy_filter = request.args.get('strategy_tag')
+
 
     query = Trade.query.filter_by(user_id=current_user.id, status='Closed')
 
     if stock_filter:
         query = query.filter(Trade.stock_name == stock_filter)
+
+    if strategy_filter:
+        query = query.filter(Trade.strategy_tag == strategy_filter)
+
 
     today = date.today()
     if date_range == 'last_month':
@@ -495,7 +511,8 @@ def trade_history():
             'realized_pnl': realized_pnl,
             'return_pct': return_pct,
             'total_days': total_days,
-            'notes': combined_notes
+            'notes': combined_notes,
+            'strategy_tag': trade.strategy_tag
         })
 
     enriched.sort(key=lambda t: t['realized_pnl'], reverse=(sort_order == 'desc'))

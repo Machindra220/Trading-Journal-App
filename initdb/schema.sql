@@ -15,6 +15,7 @@ CREATE TABLE public.trades (
     entry_note TEXT,
     exit_date DATE,
     journal TEXT,
+    strategy_tag VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL REFERENCES public.users(id),
     status VARCHAR(10) DEFAULT 'Open' NOT NULL
@@ -133,5 +134,21 @@ CREATE TABLE stage2_delivery_stock (
     delivery_spike FLOAT,
     roc_21d FLOAT,
     rs_vs_index_21d FLOAT
+);
+
+CREATE TABLE eps_screener_results (
+    id SERIAL PRIMARY KEY,
+    symbol TEXT NOT NULL,
+    symbol_clean TEXT NOT NULL,
+    screener_date DATE NOT NULL,
+    price NUMERIC(10, 2),
+    volume BIGINT,
+    delivery NUMERIC(10, 2),
+    eps_growth_q1 NUMERIC(6, 2),
+    eps_growth_q2 NUMERIC(6, 2),
+    eps_growth_q3 NUMERIC(6, 2),
+    roc_21d NUMERIC(6, 2),
+    rs_vs_index_21d NUMERIC(6, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

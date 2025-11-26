@@ -74,9 +74,9 @@ def top_performers_view():
 
 @performers_bp.route("/top-performers", methods=["POST"])
 def top_performers_process():
-    nifty_200 = get_top_performers("data/nifty_200.csv", top_n=20, suffix=".NS")
-    nifty_500 = get_top_performers("data/nifty_500.csv", top_n=20, suffix=".NS")
-    bse_200 = get_top_performers("data/bse_200.csv", top_n=20, suffix=".BO")
+    nifty_200 = get_top_performers("data/nifty_200.csv", top_n=25, suffix=".NS")
+    nifty_500 = get_top_performers("data/nifty_500.csv", top_n=25, suffix=".NS")
+    bse_200 = get_top_performers("data/bse_200.csv", top_n=25, suffix=".BO")
 
     n200_set = set([s["symbol"] for s in nifty_200])
     n500_set = set([s["symbol"] for s in nifty_500])
@@ -114,9 +114,9 @@ def upload_csv():
     flash(f"Uploaded {file.filename} successfully.", "info")
     return redirect(url_for("performers.top_performers"))
 
-# delivery_surge screener code
+# delivery_surge screener code -MCAPge250cr/nifty_750
 def load_nifty500_tickers():
-    df = pd.read_csv("data/nifty_750.csv")
+    df = pd.read_csv("data/MCAPge250cr.csv")
     df.columns = df.columns.str.strip().str.lower()
     return [s + ".NS" for s in df["symbol"].dropna().unique()]
 

@@ -24,7 +24,7 @@
         <th class="px-4 py-2">#</th>
         <th class="px-4 py-2">Date</th>
         <th class="px-4 py-2">Symbol</th>
-        <th class="px-4 py-2">Price</th>
+        <th  onclick="toggleSort('price')" data-sort="desc" class="sortable">Price ▲</th>
         <th class="px-4 py-2">30W MA</th>
         <th onclick="toggleSort('volume')" data-sort="desc" class="sortable">Volume ▲</th>
         <th onclick="toggleSort('vol_avg')" data-sort="desc" class="sortable">Avg Volume ▲</th>
@@ -43,7 +43,7 @@
           <span id="symbol-{{ loop.index }}">{{ stock.symbol_clean }}</span>
           <button onclick="copyToClipboard('{{ stock.symbol_clean }}')" class="text-blue-600 hover:underline text-sm">📋 Copy</button>
         </td>
-        <td class="px-4 py-2">{{ stock.price }}</td>
+        <td class="px-4 py-2" data-key="price">{{ stock.price }}</td>
         <td class="px-4 py-2">{{ stock.ma_30w }}</td>
         <td class="px-4 py-2" data-key="volume">{{ stock.volume }}</td>
         <td class="px-4 py-2" data-key="vol_avg">{{ stock.vol_avg }}</td>

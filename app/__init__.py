@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect, generate_csrf  # ✅ Add this line
 from app.extensions import db, login_manager, csrf, cache, mail  # ✅ Include mail
 from app.models import Resource
+from .logging_config import setup_logging   # ✅ import your logging setup
+from prometheus_flask_exporter import PrometheusMetrics
 
 load_dotenv()
 
@@ -35,7 +37,10 @@ def create_app():
     from app.routes.momentum_strategy import momentum_bp
     from app.routes.stage2_delivery import stage2_delivery_bp
     from app.routes.eps_screener import eps_bp
+    # from routes.static_pages import static_pages
+    from app.routes.vcp_screener import vcp_bp
 
+    app.register_blueprint(vcp_bp, url_prefix="/vcp")
     app.register_blueprint(eps_bp, url_prefix="/eps")
     app.register_blueprint(stage2_delivery_bp)
     app.register_blueprint(momentum_bp)
@@ -51,6 +56,8 @@ def create_app():
     app.register_blueprint(watchlist_bp)
     app.register_blueprint(performers_bp, url_prefix="/performers")
     app.register_blueprint(delivery_bp, url_prefix="/delivery")
+    # app.register_blueprint(static_pages)
+
 
     # Home route
     @app.route('/')
@@ -72,6 +79,10 @@ def create_app():
     @app.context_processor
     def inject_csrf_token():
         return dict(csrf_token=generate_csrf())
+
+    # ✅ Enable logging
+    setup_logging(app)
+    metrics = PrometheusMetrics(app, path='/metrics', default=True)
 
     return app
 #app = create_app()
