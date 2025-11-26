@@ -74,9 +74,9 @@ def top_performers_view():
 
 @performers_bp.route("/top-performers", methods=["POST"])
 def top_performers_process():
-    nifty_200 = get_top_performers("data/nifty_200.csv", top_n=20, suffix=".NS")
-    nifty_500 = get_top_performers("data/nifty_500.csv", top_n=20, suffix=".NS")
-    bse_200 = get_top_performers("data/bse_200.csv", top_n=20, suffix=".BO")
+    nifty_200 = get_top_performers("data/nifty_200.csv", top_n=25, suffix=".NS")
+    nifty_500 = get_top_performers("data/nifty_500.csv", top_n=25, suffix=".NS")
+    bse_200 = get_top_performers("data/bse_200.csv", top_n=25, suffix=".BO")
 
     n200_set = set([s["symbol"] for s in nifty_200])
     n500_set = set([s["symbol"] for s in nifty_500])
