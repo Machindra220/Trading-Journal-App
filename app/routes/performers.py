@@ -45,10 +45,10 @@ def get_top_performers(csv_file, top_n=12, suffix=".NS"):
             if data:
                 results.append({
                     "symbol": symbol,
-                    "start_price": data["start_price"],
-                    "end_price": data["end_price"],
-                    "return_pct": data["return_pct"],
-                    "current_price": data["end_price"]  # This is calling in momentum strategy
+                    "start_price": float(data["start_price"]),
+                    "end_price": float(data["end_price"]),
+                    "return_pct": float(data["return_pct"]),
+                    "current_price": float(data["end_price"]),
                 })
 
         top_df = pd.DataFrame(results).sort_values(by="return_pct", ascending=False).head(top_n)
