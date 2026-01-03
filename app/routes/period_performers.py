@@ -136,13 +136,13 @@ def export_all_excel():
     nifty_500_6m = get_top_performers("data/nifty_500.csv", 25, "6mo", ".NS")
     bse_200_6m   = get_top_performers("data/bse_200.csv",   25, "6mo", ".BO")
 
-    nifty_200_3m = get_top_performers("data/nifty_200.csv", 20, "3mo", ".NS")
-    nifty_500_3m = get_top_performers("data/nifty_500.csv", 20, "3mo", ".NS")
-    bse_200_3m   = get_top_performers("data/bse_200.csv",   20, "3mo", ".BO")
+    nifty_200_3m = get_top_performers("data/nifty_200.csv", 25, "3mo", ".NS")
+    nifty_500_3m = get_top_performers("data/nifty_500.csv", 25, "3mo", ".NS")
+    bse_200_3m   = get_top_performers("data/bse_200.csv",   25, "3mo", ".BO")
 
-    nifty_200_1m = get_top_performers("data/nifty_200.csv", 15, "1mo", ".NS")
-    nifty_500_1m = get_top_performers("data/nifty_500.csv", 15, "1mo", ".NS")
-    bse_200_1m   = get_top_performers("data/bse_200.csv",   15, "1mo", ".BO")
+    nifty_200_1m = get_top_performers("data/nifty_200.csv", 25, "1mo", ".NS")
+    nifty_500_1m = get_top_performers("data/nifty_500.csv", 25, "1mo", ".NS")
+    bse_200_1m   = get_top_performers("data/bse_200.csv",   25, "1mo", ".BO")
 
     # Create Excel with multiple sheets
     output = io.BytesIO()
