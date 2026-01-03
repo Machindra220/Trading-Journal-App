@@ -87,14 +87,14 @@ def period_performers_run():
     bse_200_6m   = get_top_performers("data/bse_200.csv",   25, "6mo", ".BO")
 
     # 3-Month Top 20
-    nifty_200_3m = get_top_performers("data/nifty_200.csv", 20, "3mo", ".NS")
-    nifty_500_3m = get_top_performers("data/nifty_500.csv", 20, "3mo", ".NS")
-    bse_200_3m   = get_top_performers("data/bse_200.csv",   20, "3mo", ".BO")
+    nifty_200_3m = get_top_performers("data/nifty_200.csv", 25, "3mo", ".NS")
+    nifty_500_3m = get_top_performers("data/nifty_500.csv", 25, "3mo", ".NS")
+    bse_200_3m   = get_top_performers("data/bse_200.csv",   25, "3mo", ".BO")
 
     # 1-Month Top 15
-    nifty_200_1m = get_top_performers("data/nifty_200.csv", 15, "1mo", ".NS")
-    nifty_500_1m = get_top_performers("data/nifty_500.csv", 15, "1mo", ".NS")
-    bse_200_1m   = get_top_performers("data/bse_200.csv",   15, "1mo", ".BO")
+    nifty_200_1m = get_top_performers("data/nifty_200.csv", 25, "1mo", ".NS")
+    nifty_500_1m = get_top_performers("data/nifty_500.csv", 25, "1mo", ".NS")
+    bse_200_1m   = get_top_performers("data/bse_200.csv",   25, "1mo", ".BO")
 
     # Overlap analysis: stocks appearing in 1M, 3M, and 6M lists for each index
     n200_set_1m = set([s["symbol"] for s in nifty_200_1m])
