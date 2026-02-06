@@ -177,8 +177,12 @@ class MomentumTrade(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     trade_date = db.Column(db.Date, nullable=False)
-    profit_loss_pct = db.Column(db.Numeric(6, 2))  # only for SELL
+    profit_loss_pct = db.Column(db.Numeric(6, 2))   # % return (only for SELL)
+    profit_loss_value = db.Column(db.Numeric(12, 2))  # ₹ gain/loss (only for SELL)
     notes = db.Column(db.Text)
+    portfolio_id = db.Column(db.Integer, db.ForeignKey("momentum_portfolio.id"))
+    portfolio = db.relationship("MomentumPortfolio", backref="trades")
+
 
 # models Delivery Surge Stock
 class DeliverySurgeStock(db.Model):

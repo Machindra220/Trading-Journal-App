@@ -1,11 +1,8 @@
-from flask import Blueprint, render_template, flash
 from datetime import datetime, timedelta
 from app.routes.performers import get_top_performers
 from app.models import db, MomentumPortfolio, MomentumTrade
 from app.utils import get_current_price
 from flask import Blueprint, render_template, flash, request
-
-
 
 momentum_bp = Blueprint('momentum', __name__)
 
@@ -27,7 +24,6 @@ def get_next_schedule_date():
 def run_momentum_strategy():
     today = datetime.today()
     next_schedule_date = get_next_schedule_date()
-
 
     if today.date() != next_schedule_date:
         flash("⚠️ Strategy is designed to run only on the first working day of each month.", "warning")
@@ -54,39 +50,62 @@ def run_momentum_strategy():
 
     # Step 5: Execute trades
     for sell in to_remove:
-        current_price = get_current_price(sell.symbol)
+        current_price = float(get_current_price(sell.symbol))
         quantity = int(5000 / float(sell.buy_price))
-        profit_pct = round(((current_price - float(sell.buy_price)) / float(sell.buy_price)) * 100, 2)
+        profit_loss_value = round((current_price - float(sell.buy_price)) * quantity, 2)
+        profit_loss_pct = round(((current_price - float(sell.buy_price)) / float(sell.buy_price)) * 100, 2)
+
+        # Record SELL trade linked to portfolio entry
         db.session.add(MomentumTrade(
-            symbol=sell.symbol, action='SELL', price=current_price,
-            quantity=quantity, trade_date=today.date(),
-            profit_loss_pct=profit_pct, notes='Removed from top 20'
+            symbol=sell.symbol,
+            action='SELL',
+            price=current_price,
+            quantity=quantity,
+            trade_date=today.date(),
+            profit_loss_value=profit_loss_value,
+            profit_loss_pct=profit_loss_pct,
+            notes='Removed from top 20',
+            portfolio_id=sell.id   # link SELL trade to portfolio entry
         ))
         sell.holding_status = 'removed'
 
     for buy in to_add:
-        quantity = int(5000 / buy["current_price"])
+        quantity = int(5000 / float(buy["current_price"]))
+
+        # Create portfolio entry first
+        portfolio_entry = MomentumPortfolio(
+            symbol=buy["symbol"],
+            buy_price=float(buy["current_price"]),
+            buy_date=today.date(),
+            source_rank=buy["rank"]
+        )
+        db.session.add(portfolio_entry)
+        db.session.flush()  # ensures portfolio_entry.id is available
+
+        # Record BUY trade linked to portfolio entry
         db.session.add(MomentumTrade(
-            symbol=buy["symbol"], action='BUY', price=buy["current_price"],
-            quantity=quantity, trade_date=today.date(),
-            notes='Added to portfolio'
-        ))
-        db.session.add(MomentumPortfolio(
-            symbol=buy["symbol"], buy_price=buy["current_price"],
-            buy_date=today.date(), source_rank=buy["rank"]
+            symbol=buy["symbol"],
+            action='BUY',
+            price=float(buy["current_price"]),
+            quantity=quantity,
+            trade_date=today.date(),
+            notes='Added to portfolio',
+            portfolio_id=portfolio_entry.id
         ))
 
     db.session.commit()
     return to_remove, to_add, today.date(), next_schedule_date
 
+
 @momentum_bp.route('/momentum/rebalance', methods=["GET"])
 def momentum_rebalance_view():
     return render_template("momentum_result.html",
-                        removed=[],
-                        added=[],
-                        run_date=None,
-                        next_schedule_date=get_next_schedule_date(),
-                        summary_message=None)
+                           removed=[],
+                           added=[],
+                           run_date=None,
+                           next_schedule_date=get_next_schedule_date(),
+                           summary_message=None)
+
 
 @momentum_bp.route('/momentum/rebalance', methods=["POST"])
 def momentum_rebalance_process():
@@ -108,6 +127,7 @@ def momentum_history():
     month_filter = request.args.get("month", "").strip()
 
     query = MomentumTrade.query.filter_by(action='BUY')
+    removed_trades = MomentumTrade.query.filter_by(action='SELL').order_by(MomentumTrade.trade_date.desc()).all()
 
     if symbol_filter:
         query = query.filter(MomentumTrade.symbol.ilike(f"%{symbol_filter}%"))
@@ -123,5 +143,8 @@ def momentum_history():
             flash("Invalid month format. Use YYYY-MM.", "error")
 
     trades = query.order_by(MomentumTrade.trade_date.desc()).all()
-    return render_template("momentum_history.html", trades=trades,
-                           symbol_filter=symbol_filter, month_filter=month_filter)
+    return render_template("momentum_history.html",
+                           trades=trades,
+                           removed_trades=removed_trades,
+                           symbol_filter=symbol_filter,
+                           month_filter=month_filter)

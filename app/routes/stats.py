@@ -7,7 +7,8 @@ from app import cache
 
 from app.routes.stats_helpers import (
     calculate_realized_pnl, is_win, holding_days,
-    get_equity_curve, get_stock_stats
+    get_equity_curve, get_stock_stats,
+    max_drawdown_trade, r_multiple
 )
 
 
@@ -72,6 +73,10 @@ def stats_dashboard():
     avg_loss_hold = round(sum(holding_days(t) for t in loss_trades) / len(loss_trades), 1) if loss_trades else 0
     avg_win = round(sum(calculate_realized_pnl(t) for t in win_trades) / len(win_trades), 2) if win_trades else 0
     avg_loss = round(sum(calculate_realized_pnl(t) for t in loss_trades) / len(loss_trades), 2) if loss_trades else 0
+# New drawdown metrics
+    avg_drawdown = round(sum(max_drawdown_trade(t) for t in closed_trades) / len(closed_trades), 2) if closed_trades else 0
+    avg_r_multiple = round(sum(r_multiple(t) for t in closed_trades) / len(closed_trades), 2) if closed_trades else 0
+
 
     win_streak = loss_streak = 0
     current_streak = 0
@@ -104,7 +109,7 @@ def stats_dashboard():
 
     # Convert to sorted list of bars
     sorted_days = sorted(daily_pnl.items(), key=lambda x: datetime.strptime(x[0], "%d-%b-%Y"))
-    trade_bars = [{"date": label, "pnl": round(pnl, 2)} for label, pnl in sorted_days[-10:]]
+    trade_bars = [{"date": label, "pnl": round(pnl, 2)} for label, pnl in sorted_days[-15:]]
     
     # 📊 Weekly Profit/Loss Bar Chart Data
     weekly_pnl = defaultdict(float)
@@ -112,12 +117,12 @@ def stats_dashboard():
     for t in closed_trades:
         if t.exit_date and calculate_realized_pnl(t) != 0:
             week_start = t.exit_date - timedelta(days=t.exit_date.weekday())  # Monday of the week
-            week_label = week_start.strftime("Week of %d %b")  # e.g., "Week of Oct 06"
+            week_label = week_start.strftime("Week of %d %b %Y")  # e.g., "Week of Oct 06"
             weekly_pnl[week_label] += calculate_realized_pnl(t)
 
     # Sort by week and keep last 10
-    sorted_weeks = sorted(weekly_pnl.items(), key=lambda x: datetime.strptime(x[0], "Week of %d %b"))
-    weekly_bars = [{"week": label, "pnl": round(pnl, 2)} for label, pnl in sorted_weeks[-10:]]
+    sorted_weeks = sorted(weekly_pnl.items(), key=lambda x: datetime.strptime(x[0], "Week of %d %b %Y"))
+    weekly_bars = [{"week": label, "pnl": round(pnl, 2)} for label, pnl in sorted_weeks[-12:]]
 
     # 📊 Monthly Profit/Loss Bar Chart Data
     monthly_pnl = defaultdict(float)
@@ -143,6 +148,8 @@ def stats_dashboard():
         'avg_loss_hold': avg_loss_hold,
         'avg_win': avg_win,
         'avg_loss': avg_loss,
+        'avg_drawdown': avg_drawdown, 
+        'avg_r_multiple': avg_r_multiple,
         'win_streak': win_streak,
         'loss_streak': loss_streak,
         'avg_daily_vol': avg_daily_vol,
