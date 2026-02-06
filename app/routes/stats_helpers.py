@@ -42,3 +42,27 @@ def get_stock_stats(trades, limit=20):
     most_profitable = dict(sorted(stats.items(), key=lambda x: x[1]['pnl'], reverse=True)[:limit])
 
     return most_traded, most_profitable
+
+def max_drawdown_trade(trade):
+    """Approximate max drawdown % for a trade using exits."""
+    if not trade.entries or not trade.exits:
+        return 0
+    entry_price = trade.entries[0].price
+    min_exit_price = min(x.price for x in trade.exits)
+    drawdown = (min_exit_price - entry_price) / entry_price * 100
+    return round(drawdown, 2)
+
+def r_multiple(trade, risk_per_share=None):
+    """
+    Calculate R multiple for a trade.
+    risk_per_share: difference between entry and stop-loss.
+    If not provided, assume 4% of entry price as risk.
+    """
+    if not trade.entries or not trade.exits:
+        return 0
+    entry_price = trade.entries[0].price
+    exit_price = trade.exits[-1].price   # last exit
+    risk = risk_per_share or (0.04 * entry_price)
+    reward = exit_price - entry_price
+    return round(reward / risk, 2) if risk else 0
+

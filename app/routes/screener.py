@@ -182,20 +182,56 @@ def stage2_process():
 # 📦 Saved stocks view
 @screener_bp.route("/stage2/saved")
 def stage2_saved():
-    cutoff = date.today() - timedelta(days=30)
     symbol_filter = request.args.get("symbol", "").strip().upper()
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    preset = request.args.get("preset", "")
+    single = request.args.get("single", "")
 
-    # Base query
+    # Default cutoff: last 30 days
+    cutoff = date.today() - timedelta(days=30)
     query = Stage2Stock.query.filter(Stage2Stock.date >= cutoff)
 
-    # Apply filter if present
+    # Apply preset quick filters
+    if preset:
+        try:
+            days = int(preset)
+            cutoff = date.today() - timedelta(days=days)
+            query = Stage2Stock.query.filter(Stage2Stock.date >= cutoff)
+        except:
+            pass
+
+    # Apply symbol filter
     if symbol_filter:
         query = query.filter(Stage2Stock.symbol.ilike(f"%{symbol_filter}%"))
+
+    # Apply date range filters
+    if start_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            query = query.filter(Stage2Stock.date >= start_dt)
+        except:
+            pass
+
+    if end_date:
+        try:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+            query = query.filter(Stage2Stock.date <= end_dt)
+        except:
+            pass
 
     # Fetch filtered stocks
     stocks = query.order_by(Stage2Stock.date.desc()).all()
 
-    # Count persistence
+    # ✅ Apply "Show Latest Only" AFTER all filters
+    if single == "true":
+        latest_map = {}
+        for stock in stocks:
+            if stock.symbol not in latest_map:
+                latest_map[stock.symbol] = stock
+        stocks = list(latest_map.values())
+
+    # Persistence counts
     counts = db.session.query(
         Stage2Stock.symbol,
         func.count(Stage2Stock.date).label("days_present")
@@ -227,7 +263,12 @@ def stage2_saved():
 
     return render_template("stage2_saved.html",
                            stocks=enriched,
-                           symbol_filter=symbol_filter)
+                           symbol_filter=symbol_filter,
+                           start_date=start_date,
+                           end_date=end_date,
+                           preset=preset,
+                           single=single)
+
 
 # 📊 Sector analysis route
 @screener_bp.route("/sector-analysis", methods=["GET"])

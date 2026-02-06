@@ -49,3 +49,4 @@ WTForms==3.2.1
 xlsxwriter==3.2.9
 yfinance==0.2.66
 gunicorn
+scipy==1.13.1
